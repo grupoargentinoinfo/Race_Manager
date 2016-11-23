@@ -10,6 +10,7 @@ import io
 import os
 import pycurl
 import urllib.request
+import requests
 
 
 _API_TOKEN_FILEPATH = os.path.abspath( os.path.join( os.getcwd( ), 'api_token.txt' ) )
@@ -61,6 +62,31 @@ def use_pycurl( url ):
 	print( body.decode( 'iso-8859-1' ) )
 
 
+def use_requests( url ):
+	"""
+	Attempt to use urllib to utilize the URL to get the race data.
+	CUrrently it returns text saying the data requested couldn't be found.
+	This is the same return text as if the URL was pasted into a web browser's
+	address bar and entered.
+
+	**Arguments:**
+		
+		:``url``: `string` The race monitor URL with api token
+
+	**Keyword Arguments:**
+
+		None
+
+	**Author:**
+
+		Jeff Hanna, 11/22/2016
+	"""
+
+	body = requests.get( url )
+	print( body.text )
+
+
+
 def use_urllib( url ):
 	"""
 	Attempt to use urllib to utilize the URL to get the race data.
@@ -84,5 +110,6 @@ def use_urllib( url ):
 
 
 if __name__ == '__main__':
-	use_pycurl( _URL )
-	use_urllib( _URL )
+	#use_pycurl( _URL )
+	use_requests( _URL )
+	#use_urllib( _URL )
