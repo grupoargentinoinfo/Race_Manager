@@ -21,7 +21,15 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="const.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="core.py" />
     <Compile Include="Race_Manager.py" />
+    <Compile Include="Race_Manager.pyw" />
+    <Compile Include="ui.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Content Include="api_token.txt" />
