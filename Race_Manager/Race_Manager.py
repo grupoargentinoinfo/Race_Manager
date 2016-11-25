@@ -1,6 +1,5 @@
 """
 Race stratgy manager that utilizes Race Monitor data streams.
-
 **Author:**
 
 	Jeff Hanna, 11/22/2016
@@ -8,70 +7,46 @@ Race stratgy manager that utilizes Race Monitor data streams.
 
 import io
 import os
-import pycurl
-import urllib.request
 import requests
 
 
 _API_TOKEN_FILEPATH = os.path.abspath( os.path.join( os.getcwd( ), 'api_token.txt' ) )
+	
 
-if os.path.exists( _API_TOKEN_FILEPATH ):
-	with open( _API_TOKEN_FILEPATH, 'r' ) as file:
-		_API_TOKEN = file.readline( ).rstrip( )
-
-_URL = 'https://api.race-monitor.com/v2/Common/AppSections --data "apiToken={0}"'.format( _API_TOKEN )
-
-
-def use_pycurl( url ):
+def get_api_token( ) -> str:
 	"""
-	Attempt to use PyCurl to utilize the URL to get the race data.
-	CUrrently it fails with an 'HTTP Error 400: Bad Request occurred'.
-	Note: Setting pycurl.SSL)VERIFYPEER and pycurl.SSL_VERIFYHOST to 0 
-	and not setting a certificate path for pycurl.CAINFO is BAD. It makes
-	the program completely vulnerable to man in the middle attacks.
-	DO NOT USE IN PRODUCTION WITH THE SSL OPTIONS DISABLED>
+	Gets the Race Monitor issued api token for this application.
+	The api token is stored in an external file named 'api_token.txt'. That file is not
+	sync'd to the GIT repository so that the token remains secure.
 
 	**Arguments:**
 		
-		:``url``: `string` The race monitor URL with api token
+		None
 
 	**Keyword Arguments:**
 
 		None
 
-	**Todo:**
-
-		Properly set up SSL protections before using in production.
-
 	**Author:**
 
-		Jeff Hanna, 11/22/2016
+		Jeff Hanna, 11/24/2016
 	"""
 
-	buffer = io.BytesIO( )
-	c = pycurl.Curl( )
-	c.setopt( pycurl.URL, url )
-	c.setopt( pycurl.SSL_VERIFYPEER, 0 ) #1
-	c.setopt( pycurl.SSL_VERIFYHOST, 0 ) #2
-	#c.setopt( pycurl.CAINFO, '' )
-	c.setopt( pycurl.WRITEDATA, buffer )
-	c.perform( )
-	c.close( )
+	if os.path.exists( _API_TOKEN_FILEPATH ):
+		with open( _API_TOKEN_FILEPATH, 'r' ) as file:
+			api_token = file.readline( ).rstrip( )
 
-	body = buffer.getvalue( )
-	print( body.decode( 'iso-8859-1' ) )
+	return api_token or ''
+	
 
-
-def use_requests( url ):
+def get_app_sections( url: str, api_token: str ) -> list:
 	"""
-	Attempt to use urllib to utilize the URL to get the race data.
-	CUrrently it returns text saying the data requested couldn't be found.
-	This is the same return text as if the URL was pasted into a web browser's
-	address bar and entered.
+	Retrieves the list of app sections from the Race Monitor servers.
 
 	**Arguments:**
 		
-		:``url``: `string` The race monitor URL with api token
+		:``url``: `string` The race monitor URL
+		:``api_token: `string` The Race Monitor issued api token for this application.
 
 	**Keyword Arguments:**
 
@@ -82,19 +57,30 @@ def use_requests( url ):
 		Jeff Hanna, 11/22/2016
 	"""
 
-	body = requests.get( url )
-	print( body.text )
+	post_data = { 'apiToken': api_token }
+	data = requests.post( url, post_data )
+	data = data.json( )
+	
+	success = data.get( 'Successful', False )
+	if success:
+		app_sections = data.get( 'AppSections', [ ] )
+
+	return app_sections or [ ]
 
 
+def list_section_names( app_sections: dict ):
+	# This should built app section classes.
+	for x in app_sections:
+		print( x.get( 'Name', '' ) )
 
-def use_urllib( url ):
+
+def main( ) -> None:
 	"""
-	Attempt to use urllib to utilize the URL to get the race data.
-	CUrrently it fails with an 'HTTP Error 400: Bad Request occurred'.
+	The main function for this application.
 
 	**Arguments:**
 		
-		:``url``: `string` The race monitor URL with api token
+		None
 
 	**Keyword Arguments:**
 
@@ -102,14 +88,18 @@ def use_urllib( url ):
 
 	**Author:**
 
-		Jeff Hanna, 11/22/2016
+		Jeff Hanna, 11/24/2016
 	"""
 
-	body = urllib.request.urlopen( url )
-	print( body.read( ) )
+	_URL = 'https://api.race-monitor.com/v2/Common/AppSections'
+	_API_TOKEN = get_api_token( )
+	if _API_TOKEN:
+		app_sections = get_app_sections( _URL, _API_TOKEN )
+		list_section_names( app_sections )
+	else:
+		print( 'No valid API token was found. Cannot continue.' )
+
 
 
 if __name__ == '__main__':
-	#use_pycurl( _URL )
-	use_requests( _URL )
-	#use_urllib( _URL )
+	main( )
