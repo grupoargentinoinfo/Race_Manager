@@ -74,6 +74,9 @@ class Race_Selection_Dialog ( wx.Dialog ):
 		self.Layout( )	 		
 		self.Centre( wx.BOTH )
 
+		self.lbk_races.Bind( wx.EVT_LISTBOOK_PAGE_CHANGING, self._on_listbook_page_changing )
+		self.lbk_races.GetPage( 0 ).list_races( ) # Emit an event instead?
+
 
 	@property
 	def race_data( self : wx.Window ) -> dict:
@@ -88,7 +91,13 @@ class Race_Selection_Dialog ( wx.Dialog ):
 				self.lbk_races.AddPage( page, page.name )
 
 
+	def _on_listbook_page_changing( self : wx.Window, event : wx.Event ) -> None:
+		page_idx = event.GetSelection( )
+		page = self.lbk_races.GetPage( page_idx )
+		page.list_races( )
 
+
+	
 class Race_List_Panel_Base ( wx.Panel ):
 	def __init__( self, parent : wx.Window, app_section: dict ) -> None:
 		super( Race_List_Panel_Base, self ).__init__( parent,
@@ -101,13 +110,11 @@ class Race_List_Panel_Base ( wx.Panel ):
 		self._series_id = self._app_section.get( const.API_ID_KEY, 0 )
 		self._current_races = core.get_current_races( self._series_id )
 		self._past_races = core.get_past_races( self._series_id )
+		self._race_names = [ ]
 		
 		sizer = wx.BoxSizer( wx.VERTICAL )
 		
-		race_names = [ x.get( const.API_NAME_KEY, '' ) for x in self._current_races ]	
-		race_names.extend( [ x.get( const.API_NAME_KEY, '' ) for x in self._past_races ] )
-					
-		self.lbx_races = wx.ListBox( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, race_names, style = wx.LB_SORT )
+		self.lbx_races = wx.ListBox( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, self._race_names, style = wx.LB_SORT )
 		sizer.Add( self.lbx_races, 1, wx.ALL|wx.EXPAND, 3 )
 		
 		self.SetSizer( sizer )
@@ -126,3 +133,10 @@ class Race_List_Panel_Base ( wx.Panel ):
 	@property
 	def id( self : wx.Panel ) -> int:
 		return self._series_id
+
+
+	def list_races( self : wx.Panel ) -> None:
+		if not self._race_names:
+			self._race_names = [ x.get( const.API_NAME_KEY, '' ) for x in self._current_races ]	
+			self._race_names.extend( [ x.get( const.API_NAME_KEY, '' ) for x in self._past_races ] )
+			self.lbx_races.Set( self._race_names )
