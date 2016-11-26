@@ -83,5 +83,44 @@ def get_app_sections( ) -> list:
 		success = data.get( const.API_SUCCESSFUL_KEY, False )
 		if success:
 			app_sections = data.get( const.API_APP_SECTIONS_KEY, [ ] )
+			return app_sections
 
-	return app_sections or [ ]
+	return [ ]
+
+
+def get_current_races( series_id : int ) -> list:
+	url = 'https://api.race-monitor.com/v2/Common/CurrentRaces'
+	api_token = get_api_token( ) # Make this a module level const?
+
+	if api_token:
+		post_data = { const.API_TOKEN_KEY : api_token,
+						  const.API_SERIES_ID_KEY : series_id, }
+
+		data = requests.post( url, post_data )
+		data = data.json( )
+
+		success = data.get( const.API_SUCCESSFUL_KEY, False )
+		if success:
+			races = data.get( const.API_RACES_KEY, [ ] )
+			return races
+
+	return [ ]
+
+
+def get_past_races( series_id : int ) -> list:
+	url = 'https://api.race-monitor.com/v2/Common/PastRaces'
+	api_token = get_api_token( ) # Make this a module level const?
+
+	if api_token:
+		post_data = { const.API_TOKEN_KEY : api_token,
+						  const.API_SERIES_ID_KEY : series_id, }
+
+		data = requests.post( url, post_data )
+		data = data.json( )
+
+		success = data.get( const.API_SUCCESSFUL_KEY, False )
+		if success:
+			races = data.get( const.API_RACES_KEY, [ ] )
+			return races
+
+	return [ ]
