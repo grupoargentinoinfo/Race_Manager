@@ -21,7 +21,6 @@ import ui
 
 
 def list_section_names( RACE_SELECTION: dict ):
-	# This should build app section classes.
 	for x in RACE_SELECTION:
 		print( x.get( 'Name', '' ) )
 

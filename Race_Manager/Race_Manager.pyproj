@@ -4,13 +4,14 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>56cbfd1a-cfa5-4d61-8e84-721d4bcf3225</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>Race_Manager.py</StartupFile>
+    <StartupFile>Race_Manager.pyw</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>Race_Manager</Name>
     <RootNamespace>Race_Manager</RootNamespace>
+    <InterpreterId>Global|PythonCore|3.5</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -33,6 +34,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="api_token.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="Global|PythonCore|3.5" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
