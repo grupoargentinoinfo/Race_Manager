@@ -1,7 +1,14 @@
+# -*- coding: utf-8 -*- 
+
 import getpass
+import gettext
 import os
 import sys
 
+
+APP_NAME = 'Race Manager'
+
+# SETUP PREFERENCES DIRECTORY FILEPATH
 username = getpass.getuser( )
 
 platform = sys.platform.lower( )
@@ -15,23 +22,44 @@ if not os.path.exists( DATA_DIR ):
 
 PREFS_FILEPATH = os.path.abspath( os.path.join( DATA_DIR, 'prefs.json' ) )
 
-MAIN_FRAME_TITLE = 'Race Managger'
+# SETUP LOCALIZATION SUPPORT
+locale_dir = os.path.join( os.path.abspath( os.path.dirname( __file__ ) ), 'locale' )
+translate = gettext.translation( APP_NAME, locale_dir, fallback = True )
+_ = translate.gettext
+
+# API TOKEN INFORMATION
+# Filepath of a text file containing the Race Monitor issued developer API token.
+# This token is intentionally kept out of the Visual Studio solution and ignored by GIT 
+# to keep the token private. Any developers contibuting to this program will need to get their
+# own API token and use that.
+#
+# THIS WILL NEED TO BE REPLACED WITH A RACE MONITOR ISSUED COMMERCIAL API TOKEN BEFORE THE 
+# SOFTWARE IS BUILT FOR COMMERCIAL DISTRIBUTION.
+__API_TOKEN_FILEPATH = os.path.abspath( os.path.join( os.getcwd( ), 'api_token.txt' ) )
+
+
+RACE_MONITOR_URL = 'https://api.race-monitor.com/v2/'
+
+MAIN_FRAME_TITLE = _( APP_NAME )
 MAIN_FRAME_DEFAULT_SIZE = ( 1024, 768 )
 MAIN_FRAME_DEFAULT_POSITION = ( -1, -1 )
 
-RACE_SELECTION_DLG_TITLE = 'Select a Race Type'
+RACE_SELECTION_DLG_TITLE = _( 'Select a Race Type' )
 RACE_SELECTION_DLG_DEFAULT_POSITION = ( -1, -1 )
 RACE_SELECTION_DLG_DEFAULT_SIZE = ( 550, 450 )
 
-API_TOKEN_KEY = 'apiToken'
-API_SERIES_ID_KEY = 'seriesID'
-API_RACE_ID_KEY = 'raceID'
-API_SUCCESSFUL_KEY = 'Successful'
 API_APP_SECTIONS_KEY = 'AppSections'
-API_RACES_KEY = 'Races'
-API_SESSION_KEY = 'Session'
 API_COMPETITORS_KEY = 'Competitors'
-API_NAME_KEY = 'Name'
-API_IMAGES_KEY = 'Images'
 API_ID_KEY = 'ID'
+API_IMAGES_KEY = 'Images'
+API_IS_LIVE_KEY = 'IsLive'
+API_MESSAGE_KEY = 'Message'
+API_NAME_KEY = 'Name'
+API_RACE_ID_KEY = 'raceID'
+API_RACES_KEY = 'Races'
+API_SERIES_ID_KEY = 'seriesID'
+API_SESSION_KEY = 'Session'
+API_SUCCESSFUL_KEY = 'Successful'
+API_TOKEN_KEY = 'apiToken'
+
 NAME_IGNORE_LIST = [ 'Oval Racing', ]

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*- 
+
 """
 A Windows Python wrapper around Race_Manager.py to prevent the console window 
 from appearing.

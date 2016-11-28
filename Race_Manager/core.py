@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*- 
+
 """
 Core logic for Race Manager.
 
@@ -19,131 +21,88 @@ import requests
 import const
 
 
-# Filepath of a text file containing the Race Monitor issued developer API token.
-# This token is intentionally kept out of the Visual Studio solution and ignored by GIT 
-# to keep the token private. Any developers contibuting to this program will need to get their
-# own API token and use that.
-#
-# THIS WILL NEED TO BE REPLACED WITH A RACE MONITOR ISSUED COMMERCIAL API TOKEN BEFORE THE 
-# SOFTWARE IS BUILT FOR COMMERCIAL DISTRIBUTION.
-_API_TOKEN_FILEPATH = os.path.abspath( os.path.join( os.getcwd( ), 'api_token.txt' ) )
-	
-
-def get_api_token( ) -> str:
+def __get_api_token( ) -> str:
 	"""
 	Gets the Race Monitor issued api token for this application.
 	The api token is stored in an external file named 'api_token.txt'. That file is not
 	sync'd to the GIT repository so that the token remains secure.
-
-	**Arguments:**
-		
-		None
-
-	**Keyword Arguments:**
-
-		None
-
-	**Author:**
-
-		Jeff Hanna, 11/24/2016
+	
+	TODO:
+	This will have to be replaced with a secure internal token storage system if/when the
+	software gets published commercially.
 	"""
 
-	if os.path.exists( _API_TOKEN_FILEPATH ):
-		with open( _API_TOKEN_FILEPATH, 'r' ) as file:
+	if os.path.exists( const.__API_TOKEN_FILEPATH ):
+		with open( const.__API_TOKEN_FILEPATH, 'r' ) as file:
 			api_token = file.readline( ).rstrip( )
 
 	return api_token or ''
+
+
+def __query_race_monitor( url_path : str, post_data : dict = { } ) -> dict :
+	url = const.RACE_MONITOR_URL + url_path
+	__api_token = __get_api_token( )
+
+	if __api_token:
+		pdata = { const.API_TOKEN_KEY : __api_token }
+		pdata.update( post_data )
+
+		data = requests.post( url, pdata ).json( )
+		
+		success = data.get( const.API_SUCCESSFUL_KEY, False )
+		if success:
+			return data
+		else:
+			# TODO: Handle various failure cases as outlined in the Race Monitor API docs
+			message = data.get( const.API_MESSAGE_KEY, '' )
+			raise Exception( message )
 	
 
 def get_app_sections( ) -> list:
-	"""
-	Retrieves the list of app sections from the Race Monitor servers.
+	data = __query_race_monitor( 'Common/AppSections' )
 
-	**Arguments:**
-		
-		None
+	if data:
+		app_sections = data.get( const.API_APP_SECTIONS_KEY, [ ] )
+		return app_sections
 
-	**Keyword Arguments:**
+	return [ ]
 
-		None
 
-	**Author:**
+def get_races( series_id : int ) -> list:
+	# TODO: Switch from Common/PastRaces to Common/CurrentRaces when getting live timing. 
+	data = __query_race_monitor( 'Common/PastRaces', #CurrentRaces', 
+										  post_data = { const.API_SERIES_ID_KEY : series_id } )
 
-		Jeff Hanna, 11/22/2016
-	"""
+	if data:
+		races = data.get( const.API_RACES_KEY, [ ] ) # list of dictionaries
+		return races
 
-	url = 'https://api.race-monitor.com/v2/Common/AppSections'
-	api_token = get_api_token( )
+	return [ ]
+
+
+def get_race_data( race_id : int ) -> tuple:
+	# TODO: CONSULT WITH RACE-MONITOR DEVS ABOUT CORRECT USAGE OF API TO GET THIS DATA.
+	# TODO: Make return data a class instead of a tuple of dicts?
+	post_data = { const.API_RACE_ID_KEY : race_id }
+	is_live = False
+
+	# Check to see if the race is live.
+	data = __query_race_monitor( 'Race/IsLive',
+										   post_data = post_data )
+
+	if data:
+		is_live = data.get( const.API_IS_LIVE_KEY, False )
+
+	if is_live:
+		data = __query_race_monitor( 'Live/GetSession', 
+											  post_data = post_data )
 	
-	if api_token:
-		post_data = { const.API_TOKEN_KEY : api_token }
-		data = requests.post( url, post_data )
-		data = data.json( )
-	
-		success = data.get( const.API_SUCCESSFUL_KEY, False )
-		if success:
-			app_sections = data.get( const.API_APP_SECTIONS_KEY, [ ] )
-			return app_sections
-
-	return [ ]
-
-
-def get_current_races( series_id : int ) -> list:
-	url = 'https://api.race-monitor.com/v2/Common/CurrentRaces'
-	api_token = get_api_token( ) # TODO: Make this a module level const?
-
-	if api_token:
-		post_data = { const.API_TOKEN_KEY : api_token,
-						  const.API_SERIES_ID_KEY : series_id, }
-
-		data = requests.post( url, post_data )
-		data = data.json( )
-
-		success = data.get( const.API_SUCCESSFUL_KEY, False )
-		if success:
-			races = data.get( const.API_RACES_KEY, [ ] ) # list of dictionaries
-			return races
-
-	return [ ]
-
-
-def get_past_races( series_id : int ) -> list:
-	url = 'https://api.race-monitor.com/v2/Common/PastRaces'
-	api_token = get_api_token( ) # TODO: Make this a module level const?
-
-	if api_token:
-		post_data = { const.API_TOKEN_KEY : api_token,
-						  const.API_SERIES_ID_KEY : series_id, }
-
-		data = requests.post( url, post_data )
-		data = data.json( )
-
-		success = data.get( const.API_SUCCESSFUL_KEY, False )
-		if success:
-			races = data.get( const.API_RACES_KEY, [ ] )
-			return races
-
-	return [ ]
-
-
-# TODO: CONSULT WITH RACE-MONITOR DEVS ABOUT CORRECT USAGE OF API TO GET THIS DATA.
-def get_race_data( race_id : int ) -> tuple: # TODO: Go ahead and make this a class?
-	url = 'https://api.race-monitor.com/v2/Race/RaceDetails'
-	api_token = get_api_token( ) # TODO: Make this a module level const?
-
-	if api_token:
-		post_data = { const.API_TOKEN_KEY : api_token,
-						  const.API_RACE_ID_KEY : race_id, }
-
-		data = requests.post( url, post_data )
-		data = data.json( )
-
-		success = data.get( const.API_SUCCESSFUL_KEY, False )
-		if success:
+		if data:
 			session = data.get( const.API_SESSION_KEY, { } )
 			competitors = data.get( const.API_COMPETITORS_KEY, { } )
 			return ( session, competitors )
 
 		return ( )
 
-
+	else:
+		raise Exception( 'Race is not live' )

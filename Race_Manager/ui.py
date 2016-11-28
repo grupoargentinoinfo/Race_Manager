@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*- 
+
 """
 wx Python based UI elements for Race Monitor
 
@@ -23,10 +25,9 @@ class Main_Frame( wx.Frame ):
 														 pos = const.MAIN_FRAME_DEFAULT_POSITION,
 														 size = const.MAIN_FRAME_DEFAULT_SIZE, 
 													  )
-
-		sizer = wx.BoxSizer( wx.VERTICAL )
-		self.SetSizer( sizer )
-		self.Layout( )
+				
+		self.status_bar = self.CreateStatusBar( 1, wx.STB_SIZEGRIP, wx.ID_ANY )
+		
 		self.Centre( wx.BOTH )
 		
 		wx.CallAfter( self._get_current_race )
@@ -129,8 +130,7 @@ class Race_List_Panel_Base ( wx.Panel ):
 		self._selection_callback = selection_callback
 
 		self._series_id = self._app_section.get( const.API_ID_KEY, 0 )
-		self._races = core.get_current_races( self._series_id )
-		self._races.extend( core.get_past_races( self._series_id ) )
+		self._races = [ ]
 		self._race_names = [ ]
 		
 		sizer = wx.BoxSizer( wx.VERTICAL )
@@ -189,5 +189,7 @@ class Race_List_Panel_Base ( wx.Panel ):
 												 		
 	def list_races( self : wx.Panel ) -> None:
 		if not self._race_names:
+			if not self._races:
+				self._races = core.get_races( self._series_id )
 			self._race_names = [ x.get( const.API_NAME_KEY, '' ) for x in self._races ]	
 			self.lbx_races.Set( self._race_names )
