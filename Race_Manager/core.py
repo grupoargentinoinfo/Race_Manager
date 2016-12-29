@@ -40,6 +40,9 @@ def __get_api_token( ) -> str:
 
 
 def __query_race_monitor( url_path : str, post_data : dict = { } ) -> dict :
+	"""
+	"""
+
 	url = const.RACE_MONITOR_URL + url_path
 	__api_token = __get_api_token( )
 
@@ -59,7 +62,10 @@ def __query_race_monitor( url_path : str, post_data : dict = { } ) -> dict :
 	
 
 def get_app_sections( ) -> list:
-	data = __query_race_monitor( 'Common/AppSections' )
+	"""
+	"""
+
+	data = __query_race_monitor( "Common/AppSections" )
 
 	if data:
 		app_sections = data.get( const.API_APP_SECTIONS_KEY, [ ] )
@@ -69,7 +75,10 @@ def get_app_sections( ) -> list:
 
 
 def get_races( series_id : int ) -> list:
+	"""
 	# TODO: Switch from Common/PastRaces to Common/CurrentRaces when getting live timing. 
+	"""
+		
 	data = __query_race_monitor( 'Common/PastRaces', #CurrentRaces', 
 										  post_data = { const.API_SERIES_ID_KEY : series_id } )
 
@@ -81,8 +90,11 @@ def get_races( series_id : int ) -> list:
 
 
 def get_race_data( race_id : int ) -> tuple:
+	"""
 	# TODO: CONSULT WITH RACE-MONITOR DEVS ABOUT CORRECT USAGE OF API TO GET THIS DATA.
 	# TODO: Make return data a class instead of a tuple of dicts?
+	"""
+
 	post_data = { const.API_RACE_ID_KEY : race_id }
 	is_live = False
 

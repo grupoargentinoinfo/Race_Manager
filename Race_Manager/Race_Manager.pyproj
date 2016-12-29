@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>56cbfd1a-cfa5-4d61-8e84-721d4bcf3225</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>Race_Manager.pyw</StartupFile>
+    <StartupFile>Race_Manager.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>

@@ -8,6 +8,7 @@ wx Python based UI elements for Race Monitor
 	Jeff Hanna, 11/24/2016
 """
 
+import gettext
 import os
 import wx
 import wx.lib.agw.labelbook
@@ -16,11 +17,16 @@ import wx.lib.agw.ribbon as rb
 
 import const
 import core
-import gettext
+
 _ = gettext.gettext
+
+ID_FIND_RACE = wx.ID_HIGHEST + 1
 
 
 class Main_Frame( wx.Frame ):
+	"""
+	"""
+
 	def __init__( self ) -> None:
 		self._race_data = { }
 
@@ -28,101 +34,82 @@ class Main_Frame( wx.Frame ):
 														id = wx.ID_ANY,
 														title = const.MAIN_FRAME_TITLE,
 														pos = const.MAIN_FRAME_DEFAULT_POSITION,
-														size = const.MAIN_FRAME_DEFAULT_SIZE, )
-				
+														size = const.MAIN_FRAME_DEFAULT_SIZE )
+
+		szr_main = wx.BoxSizer( wx.VERTICAL )
+		self.SetSizer( szr_main )
+			
+		ribbon_bar = rb.RibbonBar( self, wx.ID_ANY )	
+		szr_main.Add( ribbon_bar, 0, wx.EXPAND | wx.ALL, 0 )
+
+		rb_page_file = rb.RibbonPage( ribbon_bar, wx.ID_ANY, _( "File" ) )
+		ribbon_bar.SetActivePage( rb_page_file ) 
+
+		rb_panel_race = rb.RibbonPanel( rb_page_file, wx.ID_ANY, _( "Race" ) )		
+		rb_bbar_race = rb.RibbonButtonBar( rb_panel_race )
+
+		rb_bbar_race.AddSimpleButton( ID_FIND_RACE,
+												_( "Pick Race" ), 
+												wx.ArtProvider.GetBitmap( wx.ART_FIND, wx.ART_OTHER, wx.Size( 32, 32 ) ), 
+												wx.EmptyString )
+		
+		ribbon_page_current_race = rb.RibbonPage( ribbon_bar, wx.ID_ANY, _( "Current Race" ) )
+
+		ribbon_bar.Realize( )
+		rb_bbar_race.Bind( rb.EVT_RIBBONBUTTONBAR_CLICKED, self._get_current_race, id = ID_FIND_RACE )
+
+		pnl_main = wx.Panel( self, wx.ID_ANY, style = wx.BORDER_NONE )
+		pnl_main.SetBackgroundColour( wx.RED )
+		szr_main.Add( pnl_main, 1, wx.ALL | wx.EXPAND, 0 )
+
 		self.aui_mgr = wx.lib.agw.aui.AuiManager( )
-		self.aui_mgr.SetManagedWindow( self )
+		self.aui_mgr.SetManagedWindow( pnl_main )
 		self.aui_mgr.SetAGWFlags( wx.lib.agw.aui.AUI_MGR_DEFAULT )
+				
+		status_bar = self.CreateStatusBar( 1, wx.STB_SIZEGRIP, wx.ID_ANY )
 		
-		self.ribbon_bar = rb.RibbonBar( self, 
-												  wx.ID_ANY, 
-												  wx.DefaultPosition, 
-												  wx.DefaultSize, 
-												  wx.lib.agw.ribbon.RIBBON_BAR_DEFAULT_STYLE | wx.lib.agw.ribbon.RIBBON_BAR_SHOW_PAGE_LABELS )
-
-		self.aui_mgr.AddPane( self.ribbon_bar, 
-									 wx.lib.agw.aui.AuiPaneInfo( ).
-									 Top( ).
-									 CaptionVisible( False ).
-									 CloseButton( False ).
-									 PaneBorder( False ).
-									 Dock( ).
-									 Resizable( ).
-									 FloatingSize( wx.DefaultSize ).
-									 DockFixed( True ).
-									 BottomDockable( False ).
-									 LeftDockable( False ).
-									 RightDockable( False ).
-									 Floatable( False ) )
-		
-		self.ribbon_page_file = rb.RibbonPage( self.ribbon_bar, 
-															wx.ID_ANY, 
-															_( "File" ), 
-															wx.NullBitmap,
-															0 )
-		self.ribbon_bar.SetActivePage( self.ribbon_page_file ) 
-
-		self.ribbon_panel_file = rb.RibbonPanel( self.ribbon_page_file, 
-															  wx.ID_ANY, 
-															  wx.EmptyString, 
-															  wx.NullBitmap, 
-															  wx.DefaultPosition, 
-															  wx.DefaultSize, 
-															  wx.lib.agw.ribbon.RIBBON_PANEL_DEFAULT_STYLE )
-		
-		self.ribbon_button_bar_file = rb.RibbonButtonBar( self.ribbon_panel_file, 
-																		  wx.ID_ANY, 
-																		  wx.DefaultPosition, 
-																		  wx.DefaultSize, 
-																		  0 )
-		
-		self.ribbon_button_bar_file.AddSimpleButton( wx.ID_ANY, 
-																	_( "Pick Race" ), 
-																	wx.ArtProvider.GetBitmap( wx.ART_QUESTION, wx.ART_OTHER, wx.Size( 32, 32 ) ),
-																	wx.EmptyString )
-		
-		self.ribbon_page_current_race = rb.RibbonPage( self.ribbon_bar, 
-																	  wx.ID_ANY, 
-																	  _( "Current Race" ), 
-																	  wx.NullBitmap, 
-																	  0 )
-		#self.ribbon_bar.Realize( )
-		
-		self.status_bar = self.CreateStatusBar( 1, wx.STB_SIZEGRIP, wx.ID_ANY )
-		
-		self.aui_mgr.Update( )
-		self.Centre( wx.BOTH )
-		
+		self.aui_mgr.Update( )						
 		self.Bind( wx.EVT_CLOSE, self.Close )
 		wx.CallAfter( self._get_current_race )
 
 	
 	def __del__( self: wx.Window ):
+		"""
+		Required. If this wx.Frame is deleted without the AUI Manager being uninitialized an exception will be raised.
+		"""
+
 		self.aui_mgr.UnInit( )
-																  																  		
 	
-	def _get_current_race( self : wx.Window ):
-		if os.path.exists( const.PREFS_FILEPATH ):
-			# TODO: Put in code to detect a previously selected section/race.
-			# If that race is still ongoing (based on date/time) reload it.
-			# Otherwise, ask the user to pick a section/race.
+	
+	def _get_current_race( self : wx.Window, _event : wx.Event = None ):
+		"""
+		TODO: Put in code to detect a previously selected section/race.
+				If that race is still ongoing (based on date/time) reload it.
+				Otherwise, ask the user to pick a section/race.
+		"""
+
+		if os.path.exists( const.PREFS_FILEPATH ):			
 			pass
 		else:
 			app_sections = core.get_app_sections( )
 			dlg = Race_Selection_Dialog( self, app_sections )
-			if dlg.ShowModal( ) == wx.ID_OK:
+			if dlg.ShowModal( ) == wx.ID_OK and dlg.race_data:
 				self._race_data = dlg.race_data
 				wx.MessageBox( self._race_data[ 0 ].get( const.API_NAME_KEY, '' ) )
 
 			dlg.Destroy( )
 
-	
-	def Close( self : wx.Window, event : wx.Event ):
+
+	def Close( self: wx.Window, event : wx.Event ):
+		"""
+		Override of the standard Close( ) event with a call to uninitialize the AUI Manager
+		"""
+
 		self.__del__( )
 		event.Skip( )
 
 
-
+	
 class Race_Selection_Dialog ( wx.Dialog ):
 	def __init__( self, parent : wx.Window, app_sections : dict ) -> None:
 		super( Race_Selection_Dialog, self ).__init__( parent,
