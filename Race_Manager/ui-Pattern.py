@@ -11,95 +11,27 @@ wx Python based UI elements for Race Monitor
 import os
 import wx
 import wx.lib.agw.labelbook
-import wx.lib.agw.aui
-import wx.lib.agw.ribbon as rb
 
 import const
 import core
-import gettext
-_ = gettext.gettext
-
 
 class Main_Frame( wx.Frame ):
 	def __init__( self ) -> None:
 		self._race_data = { }
 
 		super( Main_Frame, self ).__init__( parent = None,
-														id = wx.ID_ANY,
-														title = const.MAIN_FRAME_TITLE,
-														pos = const.MAIN_FRAME_DEFAULT_POSITION,
-														size = const.MAIN_FRAME_DEFAULT_SIZE, )
+														 id = wx.ID_ANY,
+														 title = const.MAIN_FRAME_TITLE,
+														 pos = const.MAIN_FRAME_DEFAULT_POSITION,
+														 size = const.MAIN_FRAME_DEFAULT_SIZE, 
+													  )
 				
-		self.aui_mgr = wx.lib.agw.aui.AuiManager( )
-		self.aui_mgr.SetManagedWindow( self )
-		self.aui_mgr.SetAGWFlags( wx.lib.agw.aui.AUI_MGR_DEFAULT )
-		
-		self.ribbon_bar = rb.RibbonBar( self, 
-												  wx.ID_ANY, 
-												  wx.DefaultPosition, 
-												  wx.DefaultSize, 
-												  wx.lib.agw.ribbon.RIBBON_BAR_DEFAULT_STYLE | wx.lib.agw.ribbon.RIBBON_BAR_SHOW_PAGE_LABELS )
-
-		self.aui_mgr.AddPane( self.ribbon_bar, 
-									 wx.lib.agw.aui.AuiPaneInfo( ).
-									 Top( ).
-									 CaptionVisible( False ).
-									 CloseButton( False ).
-									 PaneBorder( False ).
-									 Dock( ).
-									 Resizable( ).
-									 FloatingSize( wx.DefaultSize ).
-									 DockFixed( True ).
-									 BottomDockable( False ).
-									 LeftDockable( False ).
-									 RightDockable( False ).
-									 Floatable( False ) )
-		
-		self.ribbon_page_file = rb.RibbonPage( self.ribbon_bar, 
-															wx.ID_ANY, 
-															_( "File" ), 
-															wx.NullBitmap,
-															0 )
-		self.ribbon_bar.SetActivePage( self.ribbon_page_file ) 
-
-		self.ribbon_panel_file = rb.RibbonPanel( self.ribbon_page_file, 
-															  wx.ID_ANY, 
-															  wx.EmptyString, 
-															  wx.NullBitmap, 
-															  wx.DefaultPosition, 
-															  wx.DefaultSize, 
-															  wx.lib.agw.ribbon.RIBBON_PANEL_DEFAULT_STYLE )
-		
-		self.ribbon_button_bar_file = rb.RibbonButtonBar( self.ribbon_panel_file, 
-																		  wx.ID_ANY, 
-																		  wx.DefaultPosition, 
-																		  wx.DefaultSize, 
-																		  0 )
-		
-		self.ribbon_button_bar_file.AddSimpleButton( wx.ID_ANY, 
-																	_( "Pick Race" ), 
-																	wx.ArtProvider.GetBitmap( wx.ART_QUESTION, wx.ART_OTHER, wx.Size( 32, 32 ) ),
-																	wx.EmptyString )
-		
-		self.ribbon_page_current_race = rb.RibbonPage( self.ribbon_bar, 
-																	  wx.ID_ANY, 
-																	  _( "Current Race" ), 
-																	  wx.NullBitmap, 
-																	  0 )
-		#self.ribbon_bar.Realize( )
-		
 		self.status_bar = self.CreateStatusBar( 1, wx.STB_SIZEGRIP, wx.ID_ANY )
 		
-		self.aui_mgr.Update( )
 		self.Centre( wx.BOTH )
 		
-		self.Bind( wx.EVT_CLOSE, self.Close )
 		wx.CallAfter( self._get_current_race )
-
-	
-	def __del__( self: wx.Window ):
-		self.aui_mgr.UnInit( )
-																  																  		
+		
 	
 	def _get_current_race( self : wx.Window ):
 		if os.path.exists( const.PREFS_FILEPATH ):
@@ -116,12 +48,7 @@ class Main_Frame( wx.Frame ):
 
 			dlg.Destroy( )
 
-	
-	def Close( self : wx.Window, event : wx.Event ):
-		self.__del__( )
-		event.Skip( )
-
-
+		
 
 class Race_Selection_Dialog ( wx.Dialog ):
 	def __init__( self, parent : wx.Window, app_sections : dict ) -> None:
