@@ -3,6 +3,8 @@
 """
 wx Python based UI elements for Race Monitor
 
+TODO: BREAK THIS UP INTO MULTIPLE FILES.
+
 **Author:**
 
 	Jeff Hanna, 11/24/2016
@@ -12,15 +14,15 @@ import gettext
 import os
 import wx
 import wx.lib.agw.labelbook
-import wx.lib.agw.aui
 import wx.lib.agw.ribbon as rb
 
+import aui_managed_ui
 import const
 import core
 
 _ = gettext.gettext
 
-ID_FIND_RACE = wx.ID_HIGHEST + 1
+ID_FIND_RACE = wx.NewId( )
 
 
 class Main_Frame( wx.Frame ):
@@ -58,30 +60,16 @@ class Main_Frame( wx.Frame ):
 		ribbon_bar.Realize( )
 		rb_bbar_race.Bind( rb.EVT_RIBBONBUTTONBAR_CLICKED, self._get_current_race, id = ID_FIND_RACE )
 
-		pnl_main = wx.Panel( self, wx.ID_ANY, style = wx.BORDER_NONE )
-		pnl_main.SetBackgroundColour( wx.RED )
-		szr_main.Add( pnl_main, 1, wx.ALL | wx.EXPAND, 0 )
+		main_panel = aui_managed_ui.Main_Panel( self )
+		szr_main.Add( main_panel, 1, wx.EXPAND | wx.ALL, 0 )
 
-		self.aui_mgr = wx.lib.agw.aui.AuiManager( )
-		self.aui_mgr.SetManagedWindow( pnl_main )
-		self.aui_mgr.SetAGWFlags( wx.lib.agw.aui.AUI_MGR_DEFAULT )
-				
-		status_bar = self.CreateStatusBar( 1, wx.STB_SIZEGRIP, wx.ID_ANY )
-		
-		self.aui_mgr.Update( )						
-		self.Bind( wx.EVT_CLOSE, self.Close )
+		self.status_bar = self.CreateStatusBar( 2, wx.STB_SIZEGRIP )
+
+		self.Layout( )								
 		wx.CallAfter( self._get_current_race )
 
 	
-	def __del__( self: wx.Window ):
-		"""
-		Required. If this wx.Frame is deleted without the AUI Manager being uninitialized an exception will be raised.
-		"""
-
-		self.aui_mgr.UnInit( )
-	
-	
-	def _get_current_race( self : wx.Window, _event : wx.Event = None ):
+	def _get_current_race( self : wx.Window, _event : wx.Event = None ) -> None:
 		"""
 		TODO: Put in code to detect a previously selected section/race.
 				If that race is still ongoing (based on date/time) reload it.
@@ -95,22 +83,33 @@ class Main_Frame( wx.Frame ):
 			dlg = Race_Selection_Dialog( self, app_sections )
 			if dlg.ShowModal( ) == wx.ID_OK and dlg.race_data:
 				self._race_data = dlg.race_data
-				wx.MessageBox( self._race_data[ 0 ].get( const.API_NAME_KEY, '' ) )
-
+				
 			dlg.Destroy( )
 
+		if self._race_data:
+			self._refresh_ui( )			
+			
 
-	def Close( self: wx.Window, event : wx.Event ):
+
+	def _refresh_ui( self : wx.Window ) -> None:
 		"""
-		Override of the standard Close( ) event with a call to uninitialize the AUI Manager
 		"""
 
-		self.__del__( )
-		event.Skip( )
+		msg = "{0}\n{1}\n{2}\n{3}\nCompetitors:\n{4}".format( self._race_data.name, 
+																		self._race_data.session_name,
+																		self._race_data.session_date, 
+																		self._race_data.session_time, 
+																		"\n".join( self._race_data.competitor_numbers ) )
+
+		wx.MessageBox( msg, caption = _( "Race Information" ) )
 
 
-	
+
 class Race_Selection_Dialog ( wx.Dialog ):
+	"""
+	TODO: Theme agw.LabelBook
+	"""
+
 	def __init__( self, parent : wx.Window, app_sections : dict ) -> None:
 		super( Race_Selection_Dialog, self ).__init__( parent,
 																	  id = wx.ID_ANY,
@@ -124,15 +123,8 @@ class Race_Selection_Dialog ( wx.Dialog ):
 		
 		sizer = wx.BoxSizer( wx.VERTICAL ) 	
 			
-		self.lbk_races = wx.lib.agw.labelbook.LabelBook( self, 
-																		 wx.ID_ANY, 
-																		 wx.DefaultPosition, 
-																		 wx.DefaultSize, 
-																		 agwStyle = wx.lib.agw.labelbook.INB_FIT_LABELTEXT | 
-																						wx.lib.agw.labelbook.INB_BOLD_TAB_SELECTION | 
-																						wx.lib.agw.labelbook.INB_SHOW_ONLY_TEXT )	
-
-		self.lbk_races.Bind( wx.lib.agw.labelbook.EVT_IMAGENOTEBOOK_PAGE_CHANGING, self._on_listbook_page_changing )		
+		self.lbk_races = wx.lib.agw.labelbook.LabelBook( self, wx.ID_ANY, agwStyle = wx.lib.agw.labelbook.INB_FIT_LABELTEXT )
+		self.lbk_races.Bind( wx.lib.agw.labelbook.EVT_IMAGENOTEBOOK_PAGE_CHANGING, self._on_listbook_page_changing )								
 		sizer.Add( self.lbk_races, 1, wx.EXPAND | wx.ALL, 3 )
 
 		btn_sizer = wx.Dialog.CreateStdDialogButtonSizer( self, wx.OK | wx.CANCEL )
@@ -149,29 +141,44 @@ class Race_Selection_Dialog ( wx.Dialog ):
 
 	@property
 	def race_data( self : wx.Window ) -> dict:
+		"""
+		"""
+
 		return self._race_data
 
 
 	def _add_app_section_pages( self : wx.Window ) -> None:
+		"""
+		"""
+
 		for x in self._app_sections:
-			name = x.get( const.API_NAME_KEY, '' ).lstrip( ) # Oval race types have leading spaces for list identation, remove them.
+			name = x.get( const.API_RACE_NAME_KEY, '' ).lstrip( ) # Oval race types have leading spaces for list identation, remove them.
 			if name not in const.NAME_IGNORE_LIST:
-				page = Race_List_Panel_Base( self.lbk_races, x, self._get_race_name_callback )
+				page = Race_List_Panel_Base( self.lbk_races, x, self._get_race_data_callback )
 				self.lbk_races.AddPage( page, page.name )
 
 
 	def _list_races_on_first_page( self : wx.Window ) -> None:
+		"""
+		"""
+
 		page = self.lbk_races.GetPage( 0 )
 		page.list_races( )
 
 		
 	def _on_listbook_page_changing( self : wx.Window, event : wx.Event ) -> None:
+		"""
+		"""
+
 		page_idx = event.GetSelection( )
 		page = self.lbk_races.GetPage( page_idx )
 		page.list_races( )
 
 
-	def _get_race_name_callback( self : wx.Dialog, race_data : dict, end_modal : bool = False ) -> None:
+	def _get_race_data_callback( self : wx.Dialog, race_data : dict, end_modal : bool = False ) -> None:
+		"""
+		"""
+
 		self._race_data = race_data
 		if end_modal:
 			self.EndModal( wx.ID_OK )
@@ -179,12 +186,11 @@ class Race_Selection_Dialog ( wx.Dialog ):
 
 	
 class Race_List_Panel_Base ( wx.Panel ):
-	def __init__( self, parent : wx.Window, app_section: dict, selection_callback  ) -> None:
-		super( Race_List_Panel_Base, self ).__init__( parent,
-																	 id = wx.ID_ANY,
-																	 pos = wx.DefaultPosition,
-																	 size = wx.DefaultSize, 
-																	 style = wx.TAB_TRAVERSAL, )
+	"""
+	"""
+
+	def __init__( self : wx.Panel, parent : wx.Window, app_section : dict, selection_callback ) -> None:
+		super( Race_List_Panel_Base, self ).__init__( parent, id = wx.ID_ANY, style = wx.BORDER_NONE | wx.TAB_TRAVERSAL )
 
 		self._app_section = app_section
 		self._selection_callback = selection_callback
@@ -206,50 +212,68 @@ class Race_List_Panel_Base ( wx.Panel ):
 		
 	@property
 	def name( self : wx.Panel ) -> str:
-		return self._app_section.get( const.API_NAME_KEY, '' ).lstrip( ) # oval race types have leading spaces in the names.
+		"""
+		"""
+
+		return self._app_section.get( const.API_RACE_NAME_KEY, '' ).lstrip( ) # oval race types have leading spaces in the names.
 	
 
 	@property
 	def image_name( self : wx.Panel ) -> str:
+		"""
+		"""
+
 		return self._app_section.get( const.API_IMAGES_KEY, '' )[ 0 ]
 
 
 	@property
 	def id( self : wx.Panel ) -> int:
+		"""
+		"""
+
 		return self._series_id
 
 
 	def _on_listbox( self : wx.Panel, event : wx.Event ) -> None:
+		"""
+		"""
+
 		ctrl = event.GetEventObject( )
 		selection = ctrl.GetSelection( )
 		race_name = ctrl.GetString( selection )
 		
 		for x in self._races:
-			if x.get( const.API_NAME_KEY, '' ) == race_name:
+			if x.get( const.API_RACE_NAME_KEY, '' ) == race_name:
 				race_id = x.get( const.API_ID_KEY, -1 )
 				if race_id >= 0:
-					race_data = core.get_race_data( race_id )
+					race_data = core.get_race_data( x )
 					self._selection_callback( race_data )
 					break
 
 
 	def _on_listbox_dclick( self : wx.Panel, event : wx.Event ) -> None:
+		"""
+		"""
+
 		ctrl = event.GetEventObject( )
 		selection = ctrl.GetSelection( )
 		race_name = ctrl.GetString( selection )
 		
 		for x in self._races:
-			if x.get( const.API_NAME_KEY, '' ) == race_name:
+			if x.get( const.API_RACE_NAME_KEY, '' ) == race_name:
 				race_id = x.get( const.API_ID_KEY, -1 )
 				if race_id >= 0:
-					race_data = core.get_race_data( race_id )
+					race_data = core.get_race_data( x )
 					self._selection_callback( race_data, end_modal = True )
 					break
 
 												 		
 	def list_races( self : wx.Panel ) -> None:
+		"""
+		"""
+
 		if not self._race_names:
 			if not self._races:
 				self._races = core.get_races( self._series_id )
-			self._race_names = [ x.get( const.API_NAME_KEY, '' ) for x in self._races ]	
+			self._race_names = [ x.get( const.API_RACE_NAME_KEY, '' ) for x in self._races ]	
 			self.lbx_races.Set( self._race_names )

@@ -21,6 +21,61 @@ import requests
 import const
 
 
+class Race_Data( object ):
+	"""
+	"""
+
+	def __init__( self, race_info : dict ):
+		self._name = race_info.get( const.API_RACE_NAME_KEY)
+		self._race_id = race_info.get( const.API_ID_KEY )
+		self._session = { }
+
+	@property
+	def name( self ) -> str:
+		return self._name		 
+
+	@property
+	def race_id( self ) -> int:
+		return self._race_id
+
+	@property 
+	def session( self ) -> dict:
+		return self._session
+
+	@session.setter
+	def session( self, data : dict ) -> None:
+		self._session = data
+
+	@property
+	def session_name( self ) -> str:
+		return self._session.get( const.API_RACE_NAME_KEY, '' )
+	
+	@property
+	def session_date( self ) -> str:
+		return self._session.get( 'SessionDate', '' )
+
+	@property
+	def session_time( self ) -> str:
+		return self._session.get( 'SessionTime', '' )
+	
+	@property
+	def competitors( self ) -> dict:
+		return self._competitors
+
+	@property
+	def competitor_names( self ) -> list:
+		return [ ]
+
+	@property
+	def competitor_numbers( self ) -> list:
+		sorted_competitors = self._session.get( 'SortedCompetitors', [ ] )
+		if sorted_competitors:
+			numbers = [ int( x.get( 'Number', -1 ) ) for x in sorted_competitors ]
+			numbers.sort( )
+			return numbers
+
+
+
 def __get_api_token( ) -> str:
 	"""
 	Gets the Race Monitor issued api token for this application.
@@ -39,7 +94,7 @@ def __get_api_token( ) -> str:
 	return api_token or ''
 
 
-def __query_race_monitor( url_path : str, post_data : dict = { } ) -> dict :
+def __query_race_monitor( url_path : str, post_data : dict = { } ) -> dict:
 	"""
 	"""
 
@@ -79,8 +134,7 @@ def get_races( series_id : int ) -> list:
 	# TODO: Switch from Common/PastRaces to Common/CurrentRaces when getting live timing. 
 	"""
 		
-	data = __query_race_monitor( 'Common/PastRaces', #CurrentRaces', 
-										  post_data = { const.API_SERIES_ID_KEY : series_id } )
+	data = __query_race_monitor( 'Common/PastRaces', post_data = { const.API_SERIES_ID_KEY : series_id } )
 
 	if data:
 		races = data.get( const.API_RACES_KEY, [ ] ) # list of dictionaries
@@ -89,32 +143,33 @@ def get_races( series_id : int ) -> list:
 	return [ ]
 
 
-def get_race_data( race_id : int ) -> tuple:
+def get_race_data( race_info : dict ) -> tuple:
 	"""
-	# TODO: CONSULT WITH RACE-MONITOR DEVS ABOUT CORRECT USAGE OF API TO GET THIS DATA.
-	# TODO: Make return data a class instead of a tuple of dicts?
 	"""
 
-	post_data = { const.API_RACE_ID_KEY : race_id }
+	race_data = Race_Data( race_info )
+
+	post_data = { const.API_RACE_ID_KEY : race_data.race_id }
 	is_live = False
 
 	# Check to see if the race is live.
-	data = __query_race_monitor( 'Race/IsLive',
-										   post_data = post_data )
+	data = __query_race_monitor( 'Race/IsLive', post_data = post_data )
 
 	if data:
 		is_live = data.get( const.API_IS_LIVE_KEY, False )
 
 	if is_live:
-		data = __query_race_monitor( 'Live/GetSession', 
-											  post_data = post_data )
-	
-		if data:
-			session = data.get( const.API_SESSION_KEY, { } )
-			competitors = data.get( const.API_COMPETITORS_KEY, { } )
-			return ( session, competitors )
+		api_url = 'Live/GetSession'
+	else:
+		api_url = 'Results/SessionDetails'
+		post_data = { const.API_SESSION_ID_KEY : race_data.race_id }
 
-		return ( )
+	data = __query_race_monitor( api_url, post_data = post_data )
+	
+	if data:
+		race_data.session = data.get( const.API_SESSION_KEY, { } )
 
 	else:
-		raise Exception( 'Race is not live' )
+		raise Exception( 'Could not retrieve session data.' )	 
+
+	return race_data

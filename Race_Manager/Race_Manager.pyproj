@@ -22,6 +22,9 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="aui_managed_ui.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="const.py">
       <SubType>Code</SubType>
     </Compile>
