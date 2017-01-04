@@ -70,7 +70,7 @@ class Race_Data( object ):
 	def competitor_numbers( self ) -> list:
 		sorted_competitors = self._session.get( 'SortedCompetitors', [ ] )
 		if sorted_competitors:
-			numbers = [ int( x.get( 'Number', -1 ) ) for x in sorted_competitors ]
+			numbers = [ x.get( 'Number', -1 ) for x in sorted_competitors ]
 			numbers.sort( )
 			return numbers
 
