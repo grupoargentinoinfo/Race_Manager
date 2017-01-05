@@ -4,7 +4,7 @@
 Core logic for Race Manager.
 
 The requests module is used for HTTP communications with the Race Monitor API.
-PIP can be used to install requests if it is needed for development. "pip install requests"
+PIP can be used to install requests if it is needed for development. 'pip install requests'
 
 wxPython 3.x is used for the windowing toolkit. QT was considered but there is no version of
 PySide 1.2x for Python 3.5 and PySide 2.x is, as of November 2016, not ready for production use.
@@ -120,7 +120,7 @@ def get_app_sections( ) -> list:
 	"""
 	"""
 
-	data = __query_race_monitor( "Common/AppSections" )
+	data = __query_race_monitor( 'Common/AppSections' )
 
 	if data:
 		app_sections = data.get( const.API_APP_SECTIONS_KEY, [ ] )

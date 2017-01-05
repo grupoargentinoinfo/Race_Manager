@@ -41,21 +41,21 @@ class Main_Frame( wx.Frame ):
 		szr_main = wx.BoxSizer( wx.VERTICAL )
 		self.SetSizer( szr_main )
 			
-		ribbon_bar = rb.RibbonBar( self, wx.ID_ANY )	
+		ribbon_bar = rb.RibbonBar( self, wx.ID_ANY )
 		szr_main.Add( ribbon_bar, 0, wx.EXPAND | wx.ALL, 0 )
 
-		rb_page_file = rb.RibbonPage( ribbon_bar, wx.ID_ANY, _( "File" ) )
+		rb_page_file = rb.RibbonPage( ribbon_bar, wx.ID_ANY, _( 'File' ) )
 		ribbon_bar.SetActivePage( rb_page_file ) 
 
-		rb_panel_race = rb.RibbonPanel( rb_page_file, wx.ID_ANY, _( "Race" ) )		
+		rb_panel_race = rb.RibbonPanel( rb_page_file, wx.ID_ANY, _( 'Race' ) )		
 		rb_bbar_race = rb.RibbonButtonBar( rb_panel_race )
 
 		rb_bbar_race.AddSimpleButton( ID_FIND_RACE,
-												_( "Pick Race" ), 
+												_( 'Pick Race' ), 
 												wx.ArtProvider.GetBitmap( wx.ART_FIND, wx.ART_OTHER, wx.Size( 32, 32 ) ), 
 												wx.EmptyString )
 		
-		ribbon_page_current_race = rb.RibbonPage( ribbon_bar, wx.ID_ANY, _( "Current Race" ) )
+		ribbon_page_current_race = rb.RibbonPage( ribbon_bar, wx.ID_ANY, _( 'Current Race' ) )
 
 		ribbon_bar.Realize( )
 		rb_bbar_race.Bind( rb.EVT_RIBBONBUTTONBAR_CLICKED, self._get_current_race, id = ID_FIND_RACE )
@@ -95,13 +95,13 @@ class Main_Frame( wx.Frame ):
 		"""
 		"""
 
-		msg = "{0}\n{1}\n{2}\n{3}\nCompetitors:\n{4}".format( self._race_data.name, 
+		msg = '{0}\n{1}\n{2}\n{3}\nCompetitors:\n{4}'.format( self._race_data.name, 
 																		self._race_data.session_name,
 																		self._race_data.session_date, 
 																		self._race_data.session_time, 
-																		"\n".join( self._race_data.competitor_numbers ) )
+																		'\n'.join( self._race_data.competitor_numbers ) )
 
-		wx.MessageBox( msg, caption = _( "Race Information" ) )
+		wx.MessageBox( msg, caption = _( 'Race Information' ) )
 
 
 
