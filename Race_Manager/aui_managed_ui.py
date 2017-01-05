@@ -1,3 +1,4 @@
+import datetime
 import gettext
 import wx
 import wx.lib.agw.aui
@@ -122,6 +123,8 @@ class Stopwatch_Panel( wx.Panel ):
 		btn_reset = wx.Button( self, wx.ID_ANY, _( 'Reset' ) )
 		szr_buttons.Add( btn_reset, 1, wx.EXPAND )
 		szr_main.Add( szr_buttons, 0, wx.EXPAND )
+
+		#self.stopwatch = wx.StopWatch( self, wx.ID_ANY )
 		
 		self.SetSizer( szr_main )
 		self.Layout( )
@@ -134,19 +137,28 @@ class Clock_Panel( wx.Panel ):
 	TODO: Support 12 and 24 hr time.
 	"""
 
-	def __init__(self, parent ):
+	def __init__( self, parent ):
 		super( Clock_Panel, self ).__init__( parent, wx.ID_ANY, style = wx.BORDER_NONE )
 		szr_main = wx.BoxSizer( wx.VERTICAL )
 		
-		self.display = wx.StaticText( self, wx.ID_ANY, _( '00:00 AM' ), style = wx.ALIGN_CENTRE )
+		self.display = wx.StaticText( self, wx.ID_ANY, '', style = wx.ALIGN_CENTRE )
 		self.display.Wrap( -1 )
 		self.display.SetFont( wx.Font( 48, 70, 90, 90, False, wx.EmptyString ) )
 		
 		szr_main.Add( self.display, 1, wx.ALIGN_CENTER, 0 )
 
-		self.timer = wx.Timer( self, wx.ID_ANY )
-					
+		timer = wx.Timer( self, wx.ID_ANY )		
+		timer.Start( 1000 ) 
+
+		self.Bind( wx.EVT_TIMER, self._on_timer )						
 		self.SetSizer( szr_main )
 		self.Layout( )
+		self._on_timer( None )
 
-
+		 		
+	def _on_timer( self, _event ):
+		time = datetime.datetime.now( ).time( )
+		val = '{:%H:%M:%S}'.format( time )
+		suffix = ' AM' if time.hour < 12 else ' PM'
+		val += suffix
+		self.display.SetLabel( val )
