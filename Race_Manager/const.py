@@ -64,3 +64,5 @@ API_SUCCESSFUL_KEY = 'Successful'
 API_TOKEN_KEY = 'apiToken'
 
 NAME_IGNORE_LIST = [ 'Oval Racing', ]
+
+STOPWATCH_DEFAULT_VALUE = '0:00:00.000'

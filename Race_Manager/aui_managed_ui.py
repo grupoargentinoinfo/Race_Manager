@@ -3,6 +3,8 @@ import gettext
 import wx
 import wx.lib.agw.aui
 
+import const
+
 _ = gettext.gettext
 
 
@@ -108,25 +110,25 @@ class Stopwatch_Panel( wx.Panel ):
 
 		szr_main = wx.BoxSizer( wx.VERTICAL )
 		
-		self.display = wx.StaticText( self, wx.ID_ANY, _( '0:00:00.000' ), style = wx.ALIGN_CENTRE )
+		self.display = wx.StaticText( self, wx.ID_ANY, const.STOPWATCH_DEFAULT_VALUE, style = wx.ALIGN_CENTRE )
 		self.display.Wrap( -1 )
 		self.display.SetFont( wx.Font( 48, 70, 90, 90, False, wx.EmptyString ) )
 		
 		szr_main.Add( self.display, 1, wx.ALIGN_CENTER, 0 )
 
 		szr_buttons = wx.BoxSizer( wx.HORIZONTAL )
-		btn_start = wx.Button( self, wx.ID_ANY, _( 'Start' ) )
-		btn_start.Bind( wx.EVT_BUTTON, self._on_start )
-		szr_buttons.Add( btn_start, 1, wx.EXPAND )
+		self.btn_start = wx.Button( self, wx.ID_ANY, _( 'Start' ) )
+		self.btn_start.Bind( wx.EVT_BUTTON, self._on_start )
+		szr_buttons.Add( self.btn_start, 1, wx.EXPAND )
 		self.btn_pause = wx.ToggleButton( self, wx.ID_ANY, _( 'Pause' ) )
 		self.btn_pause.Bind( wx.EVT_TOGGLEBUTTON, self._on_pause )
 		szr_buttons.Add( self.btn_pause, 1, wx.EXPAND )
-		btn_stop = wx.Button( self, wx.ID_ANY, _( 'Stop' ) )
-		btn_stop.Bind( wx.EVT_BUTTON, self._on_stop )
-		szr_buttons.Add( btn_stop, 1, wx.EXPAND )
-		btn_reset = wx.Button( self, wx.ID_ANY, _( 'Reset' ) )
-		btn_reset.Bind( wx.EVT_BUTTON, self._on_reset )
-		szr_buttons.Add( btn_reset, 1, wx.EXPAND )
+		self.btn_stop = wx.Button( self, wx.ID_ANY, _( 'Stop' ) )
+		self.btn_stop.Bind( wx.EVT_BUTTON, self._on_stop )
+		szr_buttons.Add( self.btn_stop, 1, wx.EXPAND )
+		self.btn_reset = wx.Button( self, wx.ID_ANY, _( 'Reset' ) )
+		self.btn_reset.Bind( wx.EVT_BUTTON, self._on_reset )
+		szr_buttons.Add( self.btn_reset, 1, wx.EXPAND )
 		szr_main.Add( szr_buttons, 0, wx.EXPAND )
 
 		self.timer = wx.Timer( self, wx.ID_ANY )
@@ -134,6 +136,7 @@ class Stopwatch_Panel( wx.Panel ):
 		
 		self.Bind( wx.EVT_TIMER, self._on_timer )
 		self.SetSizer( szr_main )
+		self.refresh_ui( )
 												 
 		
 	def _on_start( self, _event ):
@@ -149,6 +152,7 @@ class Stopwatch_Panel( wx.Panel ):
 				self.stopwatch.Resume( )
 
 			self.timer.Start( 10 )
+			self.refresh_ui( )
 			
 
 	def _on_stop( self, _event ):
@@ -161,6 +165,7 @@ class Stopwatch_Panel( wx.Panel ):
 			self.timer.Stop( )
 
 		self.btn_pause.SetValue( False )
+		self.refresh_ui( )
 						
 
 	def _on_pause( self, event ):
@@ -177,6 +182,8 @@ class Stopwatch_Panel( wx.Panel ):
 				self.stopwatch.Pause( )
 				self.timer.Stop( )
 
+		self.refresh_ui( )
+
 
 	def _on_reset( self, _event ):
 		"""
@@ -189,13 +196,22 @@ class Stopwatch_Panel( wx.Panel ):
 				self.timer.Stop( )
 				wx.CallAfter( self._on_start, _event )
 
-			self.display.SetLabel( '0:00:00.000' )
+			self.display.SetLabel( const.STOPWATCH_DEFAULT_VALUE )
+			self.refresh_ui( )
 
 
 	def _on_timer( self, _event ):
 		time = datetime.timedelta( milliseconds = self.stopwatch.Time( ) )
 		val = str( time )[ :-3 ] # gives 6 digts of precision, trim to 3
 		self.display.SetLabel( val )
+
+
+	def refresh_ui( self ):
+		self.btn_start.Enable( not self.timer.IsRunning( ) )
+		self.btn_pause.Enable( self.timer.IsRunning( ) and not self.btn_pause.GetValue( ) )
+		self.btn_stop.Enable( self.timer.IsRunning( ) or self.btn_pause.GetValue( ) )
+		self.btn_reset.Enable( self.timer.IsRunning( ) or ( self.display.GetLabel( ) != const.STOPWATCH_DEFAULT_VALUE ) )
+		
 
 
 
