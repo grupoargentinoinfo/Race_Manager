@@ -117,15 +117,9 @@ class Stopwatch_Panel( wx.Panel ):
 		szr_main.Add( self.display, 1, wx.ALIGN_CENTER, 0 )
 
 		szr_buttons = wx.BoxSizer( wx.HORIZONTAL )
-		self.btn_start = wx.Button( self, wx.ID_ANY, _( 'Start' ) )
-		self.btn_start.Bind( wx.EVT_BUTTON, self._on_start )
-		szr_buttons.Add( self.btn_start, 1, wx.EXPAND )
-		self.btn_pause = wx.ToggleButton( self, wx.ID_ANY, _( 'Pause' ) )
-		self.btn_pause.Bind( wx.EVT_TOGGLEBUTTON, self._on_pause )
-		szr_buttons.Add( self.btn_pause, 1, wx.EXPAND )
-		self.btn_stop = wx.Button( self, wx.ID_ANY, _( 'Stop' ) )
-		self.btn_stop.Bind( wx.EVT_BUTTON, self._on_stop )
-		szr_buttons.Add( self.btn_stop, 1, wx.EXPAND )
+		self.btn_start_stop = wx.ToggleButton( self, wx.ID_ANY, _( 'Start / Stop' ) )
+		self.btn_start_stop.Bind( wx.EVT_TOGGLEBUTTON, self._on_start_stop )
+		szr_buttons.Add( self.btn_start_stop, 1, wx.EXPAND )
 		self.btn_reset = wx.Button( self, wx.ID_ANY, _( 'Reset' ) )
 		self.btn_reset.Bind( wx.EVT_BUTTON, self._on_reset )
 		szr_buttons.Add( self.btn_reset, 1, wx.EXPAND )
@@ -136,82 +130,51 @@ class Stopwatch_Panel( wx.Panel ):
 		
 		self.Bind( wx.EVT_TIMER, self._on_timer )
 		self.SetSizer( szr_main )
-		self.refresh_ui( )
-												 
+
+		self.stopwatch_start_value = 0 
+														 
 		
-	def _on_start( self, _event ):
+	def _on_start_stop( self, event ):
 		"""
 		1/5/2017
 		"""
-
-		if not self.timer.IsRunning( ):
-			if not self.btn_pause.GetValue( ):
-				self.stopwatch.Start( 0 )
-			else:
-				self.btn_pause.SetValue( False )
-				self.stopwatch.Resume( )
-
+	
+		ctrl = event.GetEventObject( )
+		if ctrl.GetValue( ):
+			self.stopwatch.Start( self.stopwatch_start_value )
 			self.timer.Start( 10 )
-			self.refresh_ui( )
-			
-
-	def _on_stop( self, _event ):
-		"""
-		1/5/2017
-		"""
-
-		if self.timer.IsRunning( ):
+		else:
 			self.stopwatch.Pause( )
 			self.timer.Stop( )
-
-		self.btn_pause.SetValue( False )
-		self.refresh_ui( )
+			self.stopwatch_start_value = self.stopwatch.Time( )
 						
-
-	def _on_pause( self, event ):
-		"""
-		1/5/2017
-		"""
-
-		ctrl = event.GetEventObject( )
-		if not ctrl.GetValue( ):
-			self.StopWatch.Resume
-			self.timer.Start( )
-		else:
-			if self.timer.IsRunning( ):
-				self.stopwatch.Pause( )
-				self.timer.Stop( )
-
-		self.refresh_ui( )
-
 
 	def _on_reset( self, _event ):
 		"""
 		1/5/2017
 		"""
+		if self.timer.IsRunning( ):
+			self.stopwatch.Pause( )
+			self.timer.Stop( )
+			wx.CallAfter( self._restart_stopwatch )
 
-		if not self.btn_pause.GetValue( ):
-			if self.timer.IsRunning( ):
-				self.stopwatch.Pause( )
-				self.timer.Stop( )
-				wx.CallAfter( self._on_start, _event )
+		self.display.SetLabel( const.STOPWATCH_DEFAULT_VALUE )
 
-			self.display.SetLabel( const.STOPWATCH_DEFAULT_VALUE )
-			self.refresh_ui( )
+
+	def _restart_stopwatch( self ):
+		"""
+		1/6/2016
+		"""
+
+		self.stopwatch_current_value = 0
+		self.stopwatch.Start( self.stopwatch_current_value )
+		self.timer.Start( )
 
 
 	def _on_timer( self, _event ):
 		time = datetime.timedelta( milliseconds = self.stopwatch.Time( ) )
 		val = str( time )[ :-3 ] # gives 6 digts of precision, trim to 3
 		self.display.SetLabel( val )
-
-
-	def refresh_ui( self ):
-		self.btn_start.Enable( not self.timer.IsRunning( ) )
-		self.btn_pause.Enable( self.timer.IsRunning( ) and not self.btn_pause.GetValue( ) )
-		self.btn_stop.Enable( self.timer.IsRunning( ) or self.btn_pause.GetValue( ) )
-		self.btn_reset.Enable( self.timer.IsRunning( ) or ( self.display.GetLabel( ) != const.STOPWATCH_DEFAULT_VALUE ) )
-		
 
 
 
