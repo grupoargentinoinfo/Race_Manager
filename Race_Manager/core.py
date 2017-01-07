@@ -25,49 +25,49 @@ class Race_Data( object ):
 	"""
 	"""
 
-	def __init__( self, race_info : dict ):
+	def __init__( self, race_info ):
 		self._name = race_info.get( const.API_RACE_NAME_KEY)
 		self._race_id = race_info.get( const.API_ID_KEY )
 		self._session = { }
 
 	@property
-	def name( self ) -> str:
+	def name( self ):
 		return self._name		 
 
 	@property
-	def race_id( self ) -> int:
+	def race_id( self ):
 		return self._race_id
 
 	@property 
-	def session( self ) -> dict:
+	def session( self ):
 		return self._session
 
 	@session.setter
-	def session( self, data : dict ) -> None:
+	def session( self, data ):
 		self._session = data
 
 	@property
-	def session_name( self ) -> str:
+	def session_name( self ):
 		return self._session.get( const.API_RACE_NAME_KEY, '' )
 	
 	@property
-	def session_date( self ) -> str:
+	def session_date( self ):
 		return self._session.get( 'SessionDate', '' )
 
 	@property
-	def session_time( self ) -> str:
+	def session_time( self ):
 		return self._session.get( 'SessionTime', '' )
 	
 	@property
-	def competitors( self ) -> dict:
+	def competitors( self ):
 		return self._competitors
 
 	@property
-	def competitor_names( self ) -> list:
+	def competitor_names( self ):
 		return [ ]
 
 	@property
-	def competitor_numbers( self ) -> list:
+	def competitor_numbers( self ):
 		sorted_competitors = self._session.get( 'SortedCompetitors', [ ] )
 		if sorted_competitors:
 			numbers = [ x.get( 'Number', -1 ) for x in sorted_competitors ]
@@ -76,7 +76,7 @@ class Race_Data( object ):
 
 
 
-def __get_api_token( ) -> str:
+def __get_api_token( ):
 	"""
 	Gets the Race Monitor issued api token for this application.
 	The api token is stored in an external file named 'api_token.txt'. That file is not
@@ -94,7 +94,7 @@ def __get_api_token( ) -> str:
 	return api_token or ''
 
 
-def __query_race_monitor( url_path : str, post_data : dict = { } ) -> dict:
+def __query_race_monitor( url_path, post_data = { } ):
 	"""
 	"""
 
@@ -116,7 +116,7 @@ def __query_race_monitor( url_path : str, post_data : dict = { } ) -> dict:
 			raise Exception( message )
 	
 
-def get_app_sections( ) -> list:
+def get_app_sections( ):
 	"""
 	"""
 
@@ -129,7 +129,7 @@ def get_app_sections( ) -> list:
 	return [ ]
 
 
-def get_races( series_id : int ) -> list:
+def get_races( series_id ):
 	"""
 	# TODO: Switch from Common/PastRaces to Common/CurrentRaces when getting live timing. 
 	"""
@@ -143,7 +143,7 @@ def get_races( series_id : int ) -> list:
 	return [ ]
 
 
-def get_race_data( race_info : dict ) -> tuple:
+def get_race_data( race_info ):
 	"""
 	"""
 

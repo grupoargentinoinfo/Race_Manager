@@ -29,7 +29,7 @@ class Main_Frame( wx.Frame ):
 	"""
 	"""
 
-	def __init__( self ) -> None:
+	def __init__( self ):
 		self._race_data = { }
 
 		super( Main_Frame, self ).__init__( parent = None,
@@ -41,27 +41,27 @@ class Main_Frame( wx.Frame ):
 		szr_main = wx.BoxSizer( wx.VERTICAL )
 		self.SetSizer( szr_main )
 			
-		ribbon_bar = rb.RibbonBar( self, wx.ID_ANY )
-		szr_main.Add( ribbon_bar, 0, wx.EXPAND | wx.ALL, 0 )
+		#ribbon_bar = rb.RibbonBar( self, wx.ID_ANY )
+		#szr_main.Add( ribbon_bar, 0, wx.EXPAND | wx.ALL, 0 )
 
-		rb_page_file = rb.RibbonPage( ribbon_bar, wx.ID_ANY, _( 'File' ) )
-		ribbon_bar.SetActivePage( rb_page_file ) 
+		#rb_page_file = rb.RibbonPage( ribbon_bar, wx.ID_ANY, _( 'File' ) )
+		#ribbon_bar.SetActivePage( rb_page_file ) 
 
-		rb_panel_race = rb.RibbonPanel( rb_page_file, wx.ID_ANY, _( 'Race' ) )		
-		rb_bbar_race = rb.RibbonButtonBar( rb_panel_race )
+		#rb_panel_race = rb.RibbonPanel( rb_page_file, wx.ID_ANY, _( 'Race' ) )		
+		#rb_bbar_race = rb.RibbonButtonBar( rb_panel_race )
 
-		rb_bbar_race.AddSimpleButton( ID_FIND_RACE,
-												_( 'Pick Race' ), 
-												wx.ArtProvider.GetBitmap( wx.ART_FIND, wx.ART_OTHER, wx.Size( 32, 32 ) ), 
-												wx.EmptyString )
+		#rb_bbar_race.AddSimpleButton( ID_FIND_RACE,
+		#										_( 'Pick Race' ), 
+		#										wx.ArtProvider.GetBitmap( wx.ART_FIND, wx.ART_OTHER, wx.Size( 32, 32 ) ), 
+		#										wx.EmptyString )
 		
-		ribbon_page_current_race = rb.RibbonPage( ribbon_bar, wx.ID_ANY, _( 'Current Race' ) )
+		#ribbon_page_current_race = rb.RibbonPage( ribbon_bar, wx.ID_ANY, _( 'Current Race' ) )
 
-		ribbon_bar.Realize( )
-		rb_bbar_race.Bind( rb.EVT_RIBBONBUTTONBAR_CLICKED, self._get_current_race, id = ID_FIND_RACE )
+		#ribbon_bar.Realize( )
+		#rb_bbar_race.Bind( rb.EVT_RIBBONBUTTONBAR_CLICKED, self._get_current_race, id = ID_FIND_RACE )
 
-		main_panel = aui_managed_ui.Main_Panel( self )
-		szr_main.Add( main_panel, 1, wx.EXPAND | wx.ALL, 0 )
+		self.main_panel = aui_managed_ui.Main_Panel( self )
+		szr_main.Add( self.main_panel, 1, wx.EXPAND | wx.ALL, 0 )
 
 		self.status_bar = self.CreateStatusBar( 2, wx.STB_SIZEGRIP )
 
@@ -69,7 +69,7 @@ class Main_Frame( wx.Frame ):
 		wx.CallAfter( self._get_current_race )
 
 	
-	def _get_current_race( self : wx.Window, _event : wx.Event = None ) -> None:
+	def _get_current_race( self, _event = None ):
 		"""
 		TODO: Put in code to detect a previously selected section/race.
 				If that race is still ongoing (based on date/time) reload it.
@@ -87,11 +87,11 @@ class Main_Frame( wx.Frame ):
 			dlg.Destroy( )
 
 		if self._race_data:
-			self._refresh_ui( )			
-			
+			self.SetLabel( '{0}     {1} : {2}'.format( const.MAIN_FRAME_TITLE, self._race_data.name, self._race_data.session_name ) )
+			self.main_panel.list_competitors( self._race_data )			
 
 
-	def _refresh_ui( self : wx.Window ) -> None:
+	def _refresh_ui( self ):
 		"""
 		"""
 
@@ -110,7 +110,7 @@ class Race_Selection_Dialog ( wx.Dialog ):
 	TODO: Theme agw.LabelBook
 	"""
 
-	def __init__( self, parent : wx.Window, app_sections : dict ) -> None:
+	def __init__( self, parent, app_sections ):
 		super( Race_Selection_Dialog, self ).__init__( parent,
 																	  id = wx.ID_ANY,
 																	  title = const.RACE_SELECTION_DLG_TITLE,
@@ -140,14 +140,14 @@ class Race_Selection_Dialog ( wx.Dialog ):
 
 
 	@property
-	def race_data( self : wx.Window ) -> dict:
+	def race_data( self ):
 		"""
 		"""
 
 		return self._race_data
 
 
-	def _add_app_section_pages( self : wx.Window ) -> None:
+	def _add_app_section_pages( self ):
 		"""
 		"""
 
@@ -158,7 +158,7 @@ class Race_Selection_Dialog ( wx.Dialog ):
 				self.lbk_races.AddPage( page, page.name )
 
 
-	def _list_races_on_first_page( self : wx.Window ) -> None:
+	def _list_races_on_first_page( self ):
 		"""
 		"""
 
@@ -166,7 +166,7 @@ class Race_Selection_Dialog ( wx.Dialog ):
 		page.list_races( )
 
 		
-	def _on_listbook_page_changing( self : wx.Window, event : wx.Event ) -> None:
+	def _on_listbook_page_changing( self, event ):
 		"""
 		"""
 
@@ -175,7 +175,7 @@ class Race_Selection_Dialog ( wx.Dialog ):
 		page.list_races( )
 
 
-	def _get_race_data_callback( self : wx.Dialog, race_data : dict, end_modal : bool = False ) -> None:
+	def _get_race_data_callback( self, race_data, end_modal = False ):
 		"""
 		"""
 
@@ -189,7 +189,7 @@ class Race_List_Panel_Base ( wx.Panel ):
 	"""
 	"""
 
-	def __init__( self : wx.Panel, parent : wx.Window, app_section : dict, selection_callback ) -> None:
+	def __init__( self, parent, app_section, selection_callback ):
 		super( Race_List_Panel_Base, self ).__init__( parent, id = wx.ID_ANY, style = wx.BORDER_NONE | wx.TAB_TRAVERSAL )
 
 		self._app_section = app_section
@@ -211,7 +211,7 @@ class Race_List_Panel_Base ( wx.Panel ):
 
 		
 	@property
-	def name( self : wx.Panel ) -> str:
+	def name( self ):
 		"""
 		"""
 
@@ -219,7 +219,7 @@ class Race_List_Panel_Base ( wx.Panel ):
 	
 
 	@property
-	def image_name( self : wx.Panel ) -> str:
+	def image_name( self ):
 		"""
 		"""
 
@@ -227,14 +227,14 @@ class Race_List_Panel_Base ( wx.Panel ):
 
 
 	@property
-	def id( self : wx.Panel ) -> int:
+	def id( self ):
 		"""
 		"""
 
 		return self._series_id
 
 
-	def _on_listbox( self : wx.Panel, event : wx.Event ) -> None:
+	def _on_listbox( self, event ):
 		"""
 		"""
 
@@ -251,7 +251,7 @@ class Race_List_Panel_Base ( wx.Panel ):
 					break
 
 
-	def _on_listbox_dclick( self : wx.Panel, event : wx.Event ) -> None:
+	def _on_listbox_dclick( self, event ):
 		"""
 		"""
 
@@ -268,7 +268,7 @@ class Race_List_Panel_Base ( wx.Panel ):
 					break
 
 												 		
-	def list_races( self : wx.Panel ) -> None:
+	def list_races( self ):
 		"""
 		"""
 

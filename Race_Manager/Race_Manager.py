@@ -19,7 +19,7 @@ import core
 import ui
 
 
-def main( ) -> None:
+def main( ):
 	app = wx.App( )
 	frame = ui.Main_Frame( )
 	frame.Show( )

@@ -4,6 +4,7 @@ import wx
 import wx.lib.agw.aui
 
 import const
+import core
 
 _ = gettext.gettext
 
@@ -13,14 +14,14 @@ class Main_Panel( wx.Panel ):
 	AUI Docking Pane managed panel that resides in Main_Frame under the ribbon
 	"""
 
-	def __init__( self : wx.Window , parent : wx.Window ) -> None:
+	def __init__( self, parent ):
 		super( Main_Panel, self ).__init__( parent, wx.ID_ANY, style = wx.BORDER_NONE )
 		
 		self.SetDoubleBuffered( True )
 		self.aui_mgr = wx.lib.agw.aui.AuiManager( )
 		self.aui_mgr.SetManagedWindow( self )		
 		
-		self.lbx_competitors = wx.ListCtrl( self, wx.ID_ANY, style = wx.LC_ICON )
+		self.lbx_competitors = wx.ListCtrl( self, wx.ID_ANY, style = wx.LC_LIST )#  | wx.LC_SORT_ASCENDING )
 		self.aui_mgr.AddPane( self.lbx_competitors, 
 								  wx.lib.agw.aui.AuiPaneInfo( ).
 								  Name( 'lbx_competitors' ).
@@ -29,7 +30,7 @@ class Main_Panel( wx.Panel ):
 								  PinButton( True ).
 								  Dock( ).
 								  Resizable( ).
-								  FloatingSize( wx.Size( 112, 115 ) ).
+								  FloatingSize( self.lbx_competitors.GetSize( ) ).
 								  DockFixed( False ).
 								  Layer( 2 ) )
 		
@@ -56,11 +57,13 @@ class Main_Panel( wx.Panel ):
 		self.aui_mgr.AddPane( self.Stopwatch_Panel, 
 								  wx.lib.agw.aui.AuiPaneInfo( ).
 								  Name( 'Stopwatch' ).
-								  Top( ).
+								  Bottom( ).
 								  Caption( _('Stopwatch') ).
 								  PinButton( True ).
 								  Dock( ).
 								  Resizable( ).
+								  LeftDockable( False ).
+								  RightDockable( False ).
 								  FloatingSize( wx.Size( 42, 59 ) ).
 								  DockFixed( False ).Layer( 1 ) )
 		
@@ -68,11 +71,13 @@ class Main_Panel( wx.Panel ):
 		self.aui_mgr.AddPane( self.Clock_Panel, 
 								  wx.lib.agw.aui.AuiPaneInfo( ).
 								  Name( 'Clock_Panel' ).
-								  Top( ).
+								  Bottom( ).
 								  Caption( _( 'Clock' ) ).
 								  PinButton( True ).
 								  Dock( ).
 								  Resizable( ).
+								  LeftDockable( False ).
+								  RightDockable( False ).
 								  FloatingSize( wx.Size( 42, 59 ) ).
 								  DockFixed( False ).
 								  Layer( 1 ) )		
@@ -81,7 +86,7 @@ class Main_Panel( wx.Panel ):
 		self.Bind( wx.EVT_CLOSE, self.Close )
 
 														 
-	def __del__( self : wx.Window ) -> None:
+	def __del__( self ):
 		"""
 		Required. If this wx.Frame is deleted without the AUI Manager being uninitialized an exception will be raised.
 		"""
@@ -89,13 +94,25 @@ class Main_Panel( wx.Panel ):
 		self.aui_mgr.UnInit( )
 
 
-	def Close( self : wx.Window, event : wx.Event ) -> None:
+	def Close( self, event ):
 		"""
 		Override of the standard Close( ) event with a call to uninitialize the AUI Manager
 		"""
 
 		self.__del__( )
 		event.Skip( )
+
+
+	def list_competitors( self, race_data ):
+		"""
+		1/6/2017
+		"""
+
+		self.lbx_competitors.ClearAll( )
+		self.lbx_competitors.InsertColumn( 0, '' )
+		if isinstance( race_data, core.Race_Data ):
+			for i in range( len( race_data.competitor_numbers ) ):
+				self.lbx_competitors.InsertItem( i, race_data.competitor_numbers[ i ] )
 
 
 
@@ -112,13 +129,13 @@ class Stopwatch_Panel( wx.Panel ):
 		
 		self.display = wx.StaticText( self, wx.ID_ANY, const.STOPWATCH_DEFAULT_VALUE, style = wx.ALIGN_CENTRE )
 		self.display.Wrap( -1 )
-		self.display.SetFont( wx.Font( 48, 70, 90, 90, False, wx.EmptyString ) )
+		self.display.SetFont( wx.Font( 36, 70, 90, 90, False, 'Consolas' ) )
 		
 		szr_main.Add( self.display, 1, wx.ALIGN_CENTER, 0 )
 
 		szr_buttons = wx.BoxSizer( wx.HORIZONTAL )
-		self.btn_start_stop = wx.ToggleButton( self, wx.ID_ANY, _( 'Start / Stop' ) )
-		self.btn_start_stop.Bind( wx.EVT_TOGGLEBUTTON, self._on_start_stop )
+		self.btn_start_stop = wx.Button( self, wx.ID_ANY, _( 'Start / Stop' ) )
+		self.btn_start_stop.Bind( wx.EVT_BUTTON, self._on_start_stop )
 		szr_buttons.Add( self.btn_start_stop, 1, wx.EXPAND )
 		self.btn_reset = wx.Button( self, wx.ID_ANY, _( 'Reset' ) )
 		self.btn_reset.Bind( wx.EVT_BUTTON, self._on_reset )
@@ -134,13 +151,12 @@ class Stopwatch_Panel( wx.Panel ):
 		self.stopwatch_start_value = 0 
 														 
 		
-	def _on_start_stop( self, event ):
+	def _on_start_stop( self, _event ):
 		"""
 		1/5/2017
 		"""
 	
-		ctrl = event.GetEventObject( )
-		if ctrl.GetValue( ):
+		if not self.timer.IsRunning( ):
 			self.stopwatch.Start( self.stopwatch_start_value )
 			self.timer.Start( 10 )
 		else:
@@ -195,7 +211,7 @@ class Clock_Panel( wx.Panel ):
 		
 		self.display = wx.StaticText( self, wx.ID_ANY, '', style = wx.ALIGN_CENTRE )
 		self.display.Wrap( -1 )
-		self.display.SetFont( wx.Font( 48, 70, 90, 90, False, wx.EmptyString ) )
+		self.display.SetFont( wx.Font( 36, 70, 90, 90, False, 'Consolas' ) )
 		
 		szr_main.Add( self.display, 1, wx.ALIGN_CENTER, 0 )
 
