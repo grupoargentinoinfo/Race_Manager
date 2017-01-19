@@ -88,20 +88,7 @@ class Main_Frame( wx.Frame ):
 
 		if self._race_data:
 			self.SetLabel( '{0}     {1} : {2}'.format( const.MAIN_FRAME_TITLE, self._race_data.name, self._race_data.session_name ) )
-			self.main_panel.list_competitors( self._race_data )			
-
-
-	def _refresh_ui( self ):
-		"""
-		"""
-
-		msg = '{0}\n{1}\n{2}\n{3}\nCompetitors:\n{4}'.format( self._race_data.name, 
-																		self._race_data.session_name,
-																		self._race_data.session_date, 
-																		self._race_data.session_time, 
-																		'\n'.join( self._race_data.competitor_numbers ) )
-
-		wx.MessageBox( msg, caption = _( 'Race Information' ) )
+			self.main_panel.initialize_view( self._race_data )
 
 
 

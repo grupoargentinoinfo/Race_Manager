@@ -103,7 +103,7 @@ class Main_Panel( wx.Panel ):
 		event.Skip( )
 
 
-	def list_competitors( self, race_data ):
+	def initialize_view( self, race_data ):
 		"""
 		1/6/2017
 		"""
