@@ -1,11 +1,14 @@
 import datetime
 import gettext
+import os
 import wx
 import wx.lib.agw.aui
 
 import const
 import core
 
+gettext.bindtextdomain( const.APP_NAME, os.path.abspath( os.path.join( os.getcwd( ), 'locale' ) ) )
+gettext.textdomain( const.APP_NAME)
 _ = gettext.gettext
 
 
@@ -15,77 +18,80 @@ class Main_Panel( wx.Panel ):
 	"""
 
 	def __init__( self, parent ):
-		super( Main_Panel, self ).__init__( parent, wx.ID_ANY, style = wx.BORDER_NONE )
+		super( ).__init__( parent, wx.ID_ANY, style = wx.BORDER_NONE )
+		self._race_data = None
 		
 		self.SetDoubleBuffered( True )
 		self.aui_mgr = wx.lib.agw.aui.AuiManager( )
 		self.aui_mgr.SetManagedWindow( self )		
 		
-		self.lbx_competitors = wx.ListCtrl( self, wx.ID_ANY, style = wx.LC_LIST )#  | wx.LC_SORT_ASCENDING )
-		self.aui_mgr.AddPane( self.lbx_competitors, 
-								  wx.lib.agw.aui.AuiPaneInfo( ).
-								  Name( 'lbx_competitors' ).
-								  Left( ).
-								  Caption( _( 'Competitors' ) ).
-								  PinButton( True ).
-								  Dock( ).
-								  Resizable( ).
-								  FloatingSize( self.lbx_competitors.GetSize( ) ).
-								  DockFixed( False ).
-								  Layer( 2 ) )
+		self.lst_competitors = wx.ListView( self, wx.ID_ANY, style = wx.LC_LIST | wx.LC_SINGLE_SEL )
+		self.aui_mgr.AddPane( self.lst_competitors,
+									 wx.lib.agw.aui.AuiPaneInfo( ).
+									 Name( 'competitors' ).
+									 Left( ).
+									 Caption( _( 'Competitors' ) ).
+									 PinButton( True ).
+									 Dock( ).
+									 Resizable( ).
+									 FloatingSize( self.lst_competitors.GetSize( ) ).
+									 DockFixed( False ).
+									 Layer( 2 ) )
 		
 		self.nb_competitors = wx.lib.agw.aui.AuiNotebook( self, wx.ID_ANY, style = wx.lib.agw.aui.AUI_NB_DEFAULT_STYLE )
 		self.aui_mgr.AddPane( self.nb_competitors, 
-								  wx.lib.agw.aui.AuiPaneInfo( ).
-								  Name( 'nb_live_data' ).
-								  Center( ).
-								  CaptionVisible( False ).
-								  PinButton( True ).
-								  Movable( False ).
-								  Dock( ).
-								  Resizable( ).
-								  FloatingSize( wx.DefaultSize ).
-								  BottomDockable( False ).
-								  TopDockable( False ).
-								  LeftDockable( False ).
-								  RightDockable( False ).
-								  Floatable( False ).
-								  CentrePane( ).
-								  DefaultPane( ) )
+									 wx.lib.agw.aui.AuiPaneInfo( ).
+									 Name( 'nb_live_data' ).
+									 Center( ).
+									 CaptionVisible( False ).
+									 PinButton( True ).
+									 Movable( False ).
+									 Dock( ).
+									 Resizable( ).
+									 FloatingSize( wx.DefaultSize ).
+									 BottomDockable( False ).
+									 TopDockable( False ).
+									 LeftDockable( False ).
+									 RightDockable( False ).
+									 Floatable( False ).
+									 CentrePane( ).
+									 DefaultPane( ) )
 		
 		self.Stopwatch_Panel = Stopwatch_Panel( self )
 		self.aui_mgr.AddPane( self.Stopwatch_Panel, 
-								  wx.lib.agw.aui.AuiPaneInfo( ).
-								  Name( 'Stopwatch' ).
-								  Bottom( ).
-								  Caption( _('Stopwatch') ).
-								  PinButton( True ).
-								  Dock( ).
-								  Resizable( ).
-								  LeftDockable( False ).
-								  RightDockable( False ).
-								  FloatingSize( wx.Size( 42, 59 ) ).
-								  DockFixed( False ).Layer( 1 ) )
+									 wx.lib.agw.aui.AuiPaneInfo( ).
+									 Name( 'stopwatch' ).
+									 Bottom( ).
+									 Caption( _('Stopwatch') ).
+									 PinButton( True ).
+									 Dock( ).
+									 Resizable( ).
+									 LeftDockable( False ).
+									 RightDockable( False ).
+									 FloatingSize( wx.Size( 42, 59 ) ).
+									 DockFixed( False ).Layer( 1 ) )
 		
 		self.Clock_Panel = Clock_Panel( self )
-		self.aui_mgr.AddPane( self.Clock_Panel, 
-								  wx.lib.agw.aui.AuiPaneInfo( ).
-								  Name( 'Clock_Panel' ).
-								  Bottom( ).
-								  Caption( _( 'Clock' ) ).
-								  PinButton( True ).
-								  Dock( ).
-								  Resizable( ).
-								  LeftDockable( False ).
-								  RightDockable( False ).
-								  FloatingSize( wx.Size( 42, 59 ) ).
-								  DockFixed( False ).
-								  Layer( 1 ) )		
+		self.aui_mgr.AddPane( self.Clock_Panel,
+									 wx.lib.agw.aui.AuiPaneInfo( ).
+									 Name( 'clock' ).
+									 Bottom( ).
+									 Caption( _( 'Clock' ) ).
+									 PinButton( True ).
+									 Dock( ).
+									 Resizable( ).
+									 LeftDockable( False ).
+									 RightDockable( False ).
+									 FloatingSize( wx.Size( 42, 59 ) ).
+									 DockFixed( False ).
+									 Layer( 1 ) )		
 		
 		self.aui_mgr.Update( )
-		self.Bind( wx.EVT_CLOSE, self.Close )
 
-														 
+		self.Bind( wx.EVT_CLOSE, self.Close )
+		self.lst_competitors.Bind( wx.EVT_LIST_ITEM_ACTIVATED, self._on_listctrl_dclick )
+		
+				 														 
 	def __del__( self ):
 		"""
 		Required. If this wx.Frame is deleted without the AUI Manager being uninitialized an exception will be raised.
@@ -93,7 +99,7 @@ class Main_Panel( wx.Panel ):
 
 		self.aui_mgr.UnInit( )
 
-
+	
 	def Close( self, event ):
 		"""
 		Override of the standard Close( ) event with a call to uninitialize the AUI Manager
@@ -103,16 +109,34 @@ class Main_Panel( wx.Panel ):
 		event.Skip( )
 
 
+	def _on_listctrl_dclick( self, event ):
+		"""
+		3/28/2017
+		"""
+
+		ctrl = event.GetEventObject( )		
+		selection = ctrl.GetFirstSelected( )
+		item = ctrl.GetItem( selection )
+		competitor_number = item.Text
+		for x in self._race_data.session.get( 'SortedCompetitors', [ ] ):
+			if x.get( 'Number', '' ) == competitor_number:
+				wx.MessageBox( '{0} {1}'.format( x.get( 'FirstName', '' ).capitalize( ), x.get( 'LastName', '' ).capitalize( ) ) )		
+		
+
 	def initialize_view( self, race_data ):
 		"""
 		1/6/2017
 		"""
 
-		self.lbx_competitors.ClearAll( )
-		self.lbx_competitors.InsertColumn( 0, '' )
-		if isinstance( race_data, core.Race_Data ):
-			for i in range( len( race_data.competitor_numbers ) ):
-				self.lbx_competitors.InsertItem( i, race_data.competitor_numbers[ i ] )
+		self._race_data = race_data
+		self.lst_competitors.ClearAll( )
+		self.lst_competitors.InsertColumn( 0, '' )
+		if isinstance( self._race_data, core.Race_Data ):
+			for i in range( len( self._race_data.competitor_numbers ) ):
+				self.lst_competitors.InsertItem( i, self._race_data.competitor_numbers[ i ] )
+
+				# TODO: Add notebook pages for each competitor, labeled with the competitor's #.
+				#self.nb_competitors.AddPage( wx.Panel( ), self._race_data_competitor_numbers[ i ] )
 
 
 

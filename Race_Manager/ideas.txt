@@ -1,0 +1,74 @@
+Query /v2/Results/SessionsForRace/
+	Display list of sessions, possibly with dates and times?
+		{
+		    "Successful": boolean,
+		    "Sessions": [
+		        {
+		            "ID": int64,
+		            "RaceID": int32,
+		            "Name": "string",
+		            "SessionDate": "string",
+		            "SessionTime": "string",
+		            "SortMode": "string",
+		            "Categories": {
+		                "key": {
+		                    "ID": "string",
+		                    "Name": "string"
+		                }
+		            },
+		            "CategoryString": "string",
+		            "ResultsProcessorVersion": int32
+		        }
+		    ]
+		}
+		
+	When a session is selected query /v2/Results/SessionDetails/, which returns:
+		{
+		    "Successful": boolean,
+		    "Session": {
+		        "ID": int64,
+		        "RaceID": int32,
+		        "Name": "string",
+		        "SessionDate": "string",
+		        "SessionTime": "string",
+		        "SortMode": "string",
+		        "SortedCompetitors": [
+		            {
+		                "ID": int64,
+		                "SessionID": int64,
+		                "RaceID": int32,
+		                "FirstName": "string",
+		                "LastName": "string",
+		                "Position": "string",
+		                "Laps": "string",
+		                "LastLapTime": "string",
+		                "BestPosition": "string",
+		                "BestLap": "string",
+		                "BestLapTime": "string",
+		                "TotalTime": "string",
+		                "Number": "string",
+		                "Transponder": "string",
+		                "Nationality": "string",
+		                "AdditionalData": "string",
+		                "Category": "string",
+		                "LapTimes": [
+		                    {
+		                        "Lap": "string",
+		                        "LapTime": "string",
+		                        "Position": "string",
+		                        "FlagStatus": int32,
+		                        "TotalTime": "string"
+		                    }
+		                ]
+		            }
+		        ],
+		        "Categories": {
+		            "key": {
+		                "ID": "string",
+		                "Name": "string"
+		            }
+		        },
+		        "CategoryString": "string",
+		        "ResultsProcessorVersion": int32
+		    }
+		}

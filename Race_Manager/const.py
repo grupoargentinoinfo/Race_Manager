@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*- 
 
 import getpass
-import gettext
 import os
 import sys
 
 
 APP_NAME = 'Race Manager'
+
+# Get around developer API rate limit by using locally stored json data
+USE_LOCAL_DATA = True
 
 # SETUP PREFERENCES DIRECTORY FILEPATH
 username = getpass.getuser( )
@@ -22,11 +24,6 @@ if not os.path.exists( DATA_DIR ):
 
 PREFS_FILEPATH = os.path.abspath( os.path.join( DATA_DIR, 'prefs.json' ) )
 
-# SETUP LOCALIZATION SUPPORT
-locale_dir = os.path.join( os.path.abspath( os.path.dirname( __file__ ) ), 'locale' )
-translate = gettext.translation( APP_NAME, locale_dir, fallback = True )
-_ = translate.gettext
-
 # API TOKEN INFORMATION
 # Filepath of a text file containing the Race Monitor issued developer API token.
 # This token is intentionally kept out of the Visual Studio solution and ignored by GIT 
@@ -40,11 +37,9 @@ __API_TOKEN_FILEPATH = os.path.abspath( os.path.join( os.getcwd( ), 'api_token.t
 
 RACE_MONITOR_URL = 'https://api.race-monitor.com/v2/'
 
-MAIN_FRAME_TITLE = _( APP_NAME )
 MAIN_FRAME_DEFAULT_SIZE = ( 1024, 768 )
 MAIN_FRAME_DEFAULT_POSITION = ( -1, -1 )
 
-RACE_SELECTION_DLG_TITLE = _( 'Select a Race Type' )
 RACE_SELECTION_DLG_DEFAULT_POSITION = ( -1, -1 )
 RACE_SELECTION_DLG_DEFAULT_SIZE = ( 550, 450 )
 
@@ -62,6 +57,7 @@ API_SESSION_ID_KEY = 'sessionID'
 API_SESSION_KEY = 'Session'
 API_SUCCESSFUL_KEY = 'Successful'
 API_TOKEN_KEY = 'apiToken'
+API_RATE_LIMIT_EXCEEDED_KEY = 'Rate limit exceeded'
 
 NAME_IGNORE_LIST = [ 'Oval Racing', ]
 

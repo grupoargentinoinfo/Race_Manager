@@ -4,19 +4,23 @@
 Core logic for Race Manager.
 
 The requests module is used for HTTP communications with the Race Monitor API.
-PIP can be used to install requests if it is needed for development. 'pip install requests'
+PIP can be used to install requests if it is needed for development. 'pip 
+install requests'
 
-wxPython 3.x is used for the windowing toolkit. QT was considered but there is no version of
-PySide 1.2x for Python 3.5 and PySide 2.x is, as of November 2016, not ready for production use.
-The wxPython 3.x binary builds can be found here, https://wxpython.org/Phoenix/snapshot-builds/
+wxPython 3.x is used for the windowing toolkit. QT was considered but there is 
+no version of PySide 1.2x for Python 3.5 and PySide 2.x is, as of November 2016,
+not ready for production use. The wxPython 3.x binary builds can be found here, 
+https://wxpython.org/Phoenix/snapshot-builds/
 
 **Author:**
 
 	Jeff Hanna, 11/22/2016
 """
 
+import json
 import os
 import requests
+import time
 
 import const
 
@@ -79,12 +83,12 @@ class Race_Data( object ):
 def __get_api_token( ):
 	"""
 	Gets the Race Monitor issued api token for this application.
-	The api token is stored in an external file named 'api_token.txt'. That file is not
-	sync'd to the GIT repository so that the token remains secure.
+	The api token is stored in an external file named 'api_token.txt'. That file 
+	is not sync'd to the GIT repository so that the token remains secure.
 	
 	TODO:
-	This will have to be replaced with a secure internal token storage system if/when the
-	software gets published commercially.
+	This will have to be replaced with a secure internal token storage system 
+	if/when the software gets published commercially.
 	"""
 
 	if os.path.exists( const.__API_TOKEN_FILEPATH ):
@@ -94,7 +98,43 @@ def __get_api_token( ):
 	return api_token or ''
 
 
-def __query_race_monitor( url_path, post_data = { } ):
+def __local_query( url_path, pdata = { } ):
+	"""
+	# USE LOCAL DATA, IF IT EXISTS, TO GET AROUND API RATE LIMIT WHILE DEVELOPING
+	# TODO: REMOVE IN PRODUCTION BUILDS
+	"""
+
+	filename = ''
+	for id in [ const.API_RACE_ID_KEY, const.API_SESSION_ID_KEY, const.API_RACE_ID_KEY, const.API_SERIES_ID_KEY ]:
+		id_val = pdata.get( id, '' )
+		if id_val:
+			filename = '{0}_{1}.json'.format( url_path.replace( '/', '_' ), id_val )
+
+	if not filename:
+		filename = '{0}.json'.format( url_path.replace( '/', '_' ) )
+
+	filepath = os.path.join( os.getcwd( ), 'json_data', filename )
+	if os.path.exists( filepath ):
+		with open( filepath, 'r' ) as file:
+			data = json.load( file )
+	else:
+		# Fallback to actual web API if the local data doesn't exist.
+		time.sleep( 45 )
+		data = __query_race_monitor( url_path, pdata, override_use_local = True )
+		success = data.get( const.API_SUCCESSFUL_KEY, False )
+		
+		if success:	 		 		
+			if not filename:
+				filename = '{0}.json'.format( url_path.replace( '/', '_' ) )
+
+			filepath = os.path.join( os.getcwd( ), 'json_data', filename )
+			with open( filepath, 'w') as file:
+				json.dump( data, file )
+
+	return data
+					  
+
+def __query_race_monitor( url_path, post_data = { }, override_use_local = False ):
 	"""
 	"""
 
@@ -103,15 +143,21 @@ def __query_race_monitor( url_path, post_data = { } ):
 
 	if __api_token:
 		pdata = { const.API_TOKEN_KEY : __api_token }
-		pdata.update( post_data )
-
-		data = requests.post( url, pdata ).json( )
+		pdata.update( post_data )		
+		
+		# USE LOCAL DATA, IF IT EXISTS, TO GET AROUND API RATE LIMIT WHILE DEVELOPING
+		# TODO: REMOVE IN PRODUCTION BUILDS
+		if const.USE_LOCAL_DATA and not override_use_local:
+			data = __local_query( url_path, pdata )
+		else:
+			data = requests.post( url, pdata ).json( )
 		
 		success = data.get( const.API_SUCCESSFUL_KEY, False )
 		if success:
 			return data
 		else:
-			# TODO: Handle various failure cases as outlined in the Race Monitor API docs
+			# TODO: Handle various failure cases as outlined in the Race Monitor 
+			# API docs
 			message = data.get( const.API_MESSAGE_KEY, '' )
 			raise Exception( message )
 	
@@ -131,7 +177,8 @@ def get_app_sections( ):
 
 def get_races( series_id ):
 	"""
-	# TODO: Switch from Common/PastRaces to Common/CurrentRaces when getting live timing. 
+	# TODO: Switch from Common/PastRaces to Common/CurrentRaces when getting 
+	# live timing. 
 	"""
 		
 	data = __query_race_monitor( 'Common/PastRaces', post_data = { const.API_SERIES_ID_KEY : series_id } )
@@ -158,18 +205,15 @@ def get_race_data( race_info ):
 	if data:
 		is_live = data.get( const.API_IS_LIVE_KEY, False )
 
-	if is_live:
-		api_url = 'Live/GetSession'
-	else:
-		api_url = 'Results/SessionDetails'
-		post_data = { const.API_SESSION_ID_KEY : race_data.race_id }
+	api_url = 'Live/GetSession' if is_live else 'Results/SessionDetails'	
+	post_data = { const.API_SESSION_ID_KEY : race_data.race_id }
 
 	data = __query_race_monitor( api_url, post_data = post_data )
 	
 	if data:
 		race_data.session = data.get( const.API_SESSION_KEY, { } )
 
-	else:
-		raise Exception( 'Could not retrieve session data.' )	 
+	#else:
+		#raise Exception( 'Could not retrieve session data.' )	 
 
 	return race_data
