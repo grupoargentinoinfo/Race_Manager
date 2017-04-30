@@ -25,25 +25,26 @@ class Main_Panel( wx.Panel ):
 		self.aui_mgr = wx.lib.agw.aui.AuiManager( )
 		self.aui_mgr.SetManagedWindow( self )		
 		
-		self.lst_competitors = wx.ListView( self, wx.ID_ANY, style = wx.LC_LIST | wx.LC_SINGLE_SEL )
-		self.aui_mgr.AddPane( self.lst_competitors,
-									 wx.lib.agw.aui.AuiPaneInfo( ).
-									 Name( 'competitors' ).
-									 Left( ).
-									 Caption( _( 'Competitors' ) ).
-									 PinButton( True ).
-									 Dock( ).
-									 Resizable( ).
-									 FloatingSize( self.lst_competitors.GetSize( ) ).
-									 DockFixed( False ).
-									 Layer( 2 ) )
+		#self.lst_competitors = wx.ListView( self, wx.ID_ANY, style = wx.LC_LIST | wx.LC_SINGLE_SEL )
+		#self.aui_mgr.AddPane( self.lst_competitors,
+		#							 wx.lib.agw.aui.AuiPaneInfo( ).
+		#							 Name( 'competitors' ).
+		#							 Left( ).
+		#							 Caption( _( 'Competitors' ) ).
+		#							 PinButton( True ).
+		#							 Dock( ).
+		#							 Resizable( ).
+		#							 FloatingSize( self.lst_competitors.GetSize( ) ).
+		#							 DockFixed( False ).
+		#							 Layer( 2 ) )
 		
 		self.nb_competitors = wx.lib.agw.aui.AuiNotebook( self, wx.ID_ANY, style = wx.lib.agw.aui.AUI_NB_DEFAULT_STYLE )
 		self.aui_mgr.AddPane( self.nb_competitors, 
 									 wx.lib.agw.aui.AuiPaneInfo( ).
 									 Name( 'nb_live_data' ).
 									 Center( ).
-									 CaptionVisible( False ).
+									 CaptionVisible( True ).
+									 Caption( _( 'Competitors' ) ).
 									 PinButton( True ).
 									 Movable( False ).
 									 Dock( ).
@@ -62,7 +63,7 @@ class Main_Panel( wx.Panel ):
 									 wx.lib.agw.aui.AuiPaneInfo( ).
 									 Name( 'stopwatch' ).
 									 Bottom( ).
-									 Caption( _('Stopwatch') ).
+									 Caption( _( 'Stopwatch' ) ).
 									 PinButton( True ).
 									 Dock( ).
 									 Resizable( ).
@@ -89,7 +90,7 @@ class Main_Panel( wx.Panel ):
 		self.aui_mgr.Update( )
 
 		self.Bind( wx.EVT_CLOSE, self.Close )
-		self.lst_competitors.Bind( wx.EVT_LIST_ITEM_ACTIVATED, self._on_listctrl_dclick )
+		#self.lst_competitors.Bind( wx.EVT_LIST_ITEM_ACTIVATED, self._on_listctrl_dclick )
 		
 				 														 
 	def __del__( self ):
@@ -109,18 +110,18 @@ class Main_Panel( wx.Panel ):
 		event.Skip( )
 
 
-	def _on_listctrl_dclick( self, event ):
-		"""
-		3/28/2017
-		"""
+	#def _on_listctrl_dclick( self, event ):
+	#	"""
+	#	3/28/2017
+	#	"""
 
-		ctrl = event.GetEventObject( )		
-		selection = ctrl.GetFirstSelected( )
-		item = ctrl.GetItem( selection )
-		competitor_number = item.Text
-		for x in self._race_data.session.get( 'SortedCompetitors', [ ] ):
-			if x.get( 'Number', '' ) == competitor_number:
-				wx.MessageBox( '{0} {1}'.format( x.get( 'FirstName', '' ).capitalize( ), x.get( 'LastName', '' ).capitalize( ) ) )		
+	#	ctrl = event.GetEventObject( )		
+	#	selection = ctrl.GetFirstSelected( )
+	#	item = ctrl.GetItem( selection )
+	#	competitor_number = item.Text
+	#	for x in self._race_data.session.get( 'SortedCompetitors', [ ] ):
+	#		if x.get( 'Number', '' ) == competitor_number:
+	#			wx.MessageBox( '{0} {1}'.format( x.get( 'FirstName', '' ).capitalize( ), x.get( 'LastName', '' ).capitalize( ) ) )		
 		
 
 	def initialize_view( self, race_data ):
@@ -129,14 +130,26 @@ class Main_Panel( wx.Panel ):
 		"""
 
 		self._race_data = race_data
-		self.lst_competitors.ClearAll( )
-		self.lst_competitors.InsertColumn( 0, '' )
+		#self.lst_competitors.ClearAll( )
+		#self.lst_competitors.InsertColumn( 0, '' )
 		if isinstance( self._race_data, core.Race_Data ):
-			for i in range( len( self._race_data.competitor_numbers ) ):
-				self.lst_competitors.InsertItem( i, self._race_data.competitor_numbers[ i ] )
+			for i in self._race_data.competitor_numbers:
+				#self.lst_competitors.InsertItem( i, self._race_data.competitor_numbers[ i ] )
+				self.nb_competitors.AddPage( Competitor_Panel( self.nb_competitors ), i )
+				
 
-				# TODO: Add notebook pages for each competitor, labeled with the competitor's #.
-				#self.nb_competitors.AddPage( wx.Panel( ), self._race_data_competitor_numbers[ i ] )
+
+class Competitor_Panel( wx.Panel ):
+	"""
+	4/26/2017
+	"""
+
+	def __init__( self, parent ):
+		super( Competitor_Panel, self ).__init__( parent, wx.ID_ANY, style = wx.BORDER_NONE )
+
+		szr_main = wx.BoxSizer( wx.VERTICAL )
+
+		self.SetSizer( szr_main )
 
 
 
